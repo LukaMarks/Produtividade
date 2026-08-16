@@ -20,15 +20,13 @@
         canvas {
             display: block; width: 100%; height: 100%;
             image-rendering: pixelated;
-            transition: filter 0.3s ease; /* Transição para modo Ultra */
+            transition: filter 0.3s ease;
         }
         
-        /* FILTRO ULTRA GFX NO CANVAS */
         canvas.gfx-ultra {
             filter: contrast(1.15) saturate(1.25) brightness(1.05) drop-shadow(0 0 10px rgba(0,0,0,0.5));
         }
 
-        /* VINHETA E EFEITOS DE DANO (MANTIDOS) */
         #vignette {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             pointer-events: none; z-index: 4;
@@ -53,16 +51,11 @@
         }
         #blood-screen svg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
 
-        /* ========================================================= */
-        /* NOVO FILTRO CRT (TV DE TUBO)                              */
-        /* ========================================================= */
         #crt-overlay {
             position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
             pointer-events: none; z-index: 9999; display: none;
-            /* Scanlines */
             background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
             background-size: 100% 4px, 6px 100%;
-            /* Leve sombra interna imitando tela convexa */
             box-shadow: inset 0 0 100px rgba(0,0,0,0.9);
             animation: flicker 0.15s infinite;
         }
@@ -72,9 +65,6 @@
             100% { opacity: 0.95; }
         }
 
-        /* ========================================================= */
-        /* MENU                                                      */
-        /* ========================================================= */
         #menu-wrapper {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             z-index: 30;
@@ -131,7 +121,7 @@
             border-radius: 20px; box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5); padding: 30px; color: #fff; text-align: center;
             z-index: 15; width: 90%; max-width: 500px; display: none; flex-direction: column; gap: 15px;
             position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            max-height: 90vh; overflow-y: auto; /* Para telas menores */
+            max-height: 90vh; overflow-y: auto;
         }
 
         .glass-btn {
@@ -171,7 +161,6 @@
             display: flex; flex-direction: column; justify-content: center; align-items: center; background: rgba(10, 5, 20, 0.6); z-index: 30;
         }
 
-        /* BOTÃO DE PAUSA */
         #pause-btn {
             position: absolute; top: calc(14px + env(safe-area-inset-top, 0px)); right: calc(14px + env(safe-area-inset-right, 0px)); z-index: 50;
             width: 42px; height: 42px; display: none; align-items: center; justify-content: center;
@@ -181,7 +170,6 @@
         }
         #pause-btn:active { transform: scale(0.92); }
 
-        /* HUD */
         #hud {
             position: absolute; top: calc(12px + env(safe-area-inset-top, 0px)); left: 0; width: 100%;
             display: flex; justify-content: space-between; align-items: flex-start;
@@ -198,14 +186,19 @@
         #hp-bar { height: 100%; background: #fff; width: 100%; border-radius: 4px; transition: width 0.2s ease-out; }
         #reload-msg { position: absolute; bottom: 30%; left: 50%; transform: translateX(-50%); color: #e8c96a; font-weight: bold; font-size: 1rem; text-shadow: 2px 2px #000; z-index: 10; display: none; letter-spacing: 2px; }
 
-        /* ARMA E EFEITOS */
+        /* ARMA BEM PEQUENA, DISCRETA E POSICIONADA MAIS ABAIXO DA MIRA CENTRAL */
         #weapon-layer {
-            position: absolute; bottom: -2%; left: -4%; transform: translate(0,0);
-            transform-origin: 10% 90%; width: clamp(250px, 82vmin, 460px); aspect-ratio: 520 / 440;
-            z-index: 5; pointer-events: none; display: none; filter: drop-shadow(0 8px 10px rgba(0,0,0,0.6)); will-change: transform;
+            position: absolute; bottom: -6%; left: 50%; 
+            transform-origin: 50% 100%;
+            width: clamp(140px, 32vmin, 220px); /* Bem menor e mais compacta */
+            aspect-ratio: 1 / 1;
+            margin-left: calc(clamp(140px, 32vmin, 220px) / -2);
+            z-index: 5; pointer-events: none; display: none; 
+            filter: drop-shadow(0 10px 10px rgba(0,0,0,0.8)); 
+            will-change: transform;
+            image-rendering: pixelated;
         }
 
-        /* CONTROLES MOBILE */
         #mobile-controls { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 20; display: none; pointer-events: none; }
         #camera-zone { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; pointer-events: auto; }
         #joystick-base {
@@ -229,15 +222,12 @@
 </head>
 <body>
 <audio id="menu-music" src="sua_musica.mp3" loop></audio>
-<!-- Áudio para a Gameplay -->
 <audio id="gameplay-music" src="music_gameplay.mp3" loop></audio>
 
-    <!-- SOBREPOSIÇÃO CRT GERAL -->
     <div id="crt-overlay"></div>
 
     <div id="game-container">
         
-        <!-- MAIN MENU -->
         <div id="menu-wrapper">
             <div class="cloud-layer"></div>
             
@@ -259,7 +249,6 @@
                 <button class="glass-btn" onclick="openMenu('credits-panel')">CRÉDITOS</button>
             </div>
 
-            <!-- OPÇÕES MAIN MENU -->
             <div id="options-panel" class="glass-panel">
                 <h3>Opções de Jogo</h3>
                 
@@ -288,7 +277,6 @@
                     </div>
                 </div>
 
-                <!-- Toggle de Música da Gameplay no Menu Principal -->
                 <div class="mode-row">
                     <label>Música (Gameplay)</label>
                     <div class="mode-btns">
@@ -313,19 +301,17 @@
                 <button class="glass-btn" style="margin-top: 10px;" onclick="openMenu('main-nav')">VOLTAR</button>
             </div>
 
-            <!-- CRÉDITOS -->
             <div id="credits-panel" class="glass-panel">
                 <h3>Créditos</h3>
                 <p style="color: #ccc; line-height: 1.6;">
                     <strong>Desenvolvedor:</strong> @lukamarks<br>
-                    <strong>Versão:</strong> 1.8 <br><br>
-                    <span style="font-size: 0.9em;">Soldados do eixo tomaram a cidade francesa de Saint-Lô. Empunhe sua Thompson e sobreviva.</span>
+                    <strong>Versão:</strong> 1.9 (Retro Edition) <br><br>
+                    <span style="font-size: 0.9em;">Soldados do eixo tomaram a cidade francesa de Saint-Lô. Empunhe seu rifle e sobreviva.</span>
                 </p>
                 <button class="glass-btn" style="margin-top: 10px;" onclick="openMenu('main-nav')">VOLTAR</button>
             </div>
         </div>
 
-        <!-- TELAS DE PAUSA E GAME OVER -->
         <div id="gameover-screen" class="overlay" style="display: none;">
             <div class="glass-panel" style="display: flex; border-color: rgba(200, 40, 40, 0.4);">
                 <h1 style="color: #ff4c4c; font-family: 'Times New Roman', serif; margin-bottom: 0;">FIM DE JOGO</h1>
@@ -339,7 +325,6 @@
             </div>
         </div>
 
-        <!-- OPÇÕES MENU DE PAUSA -->
         <div id="pause-screen" class="overlay" style="display: none;">
             <div class="glass-panel" style="display: flex;">
                 <h1 style="font-family: 'Times New Roman', serif; margin-bottom: 5px;">PAUSADO</h1>
@@ -361,7 +346,6 @@
                     </div>
                 </div>
 
-                <!-- Toggle de Música da Gameplay no Menu de Pausa -->
                 <div class="mode-row" style="margin-bottom: 5px;">
                     <label>Música (Gameplay)</label>
                     <div class="mode-btns">
@@ -401,61 +385,9 @@
         <div id="reload-msg">RECARREGANDO...</div>
         <div id="pc-hint">WASD mover · Mouse/Espaço atira · R recarregar</div>
 
-        <!-- Arma -->
-        <svg id="weapon-layer" viewBox="0 0 520 440" preserveAspectRatio="xMinYMax meet">
-            <defs>
-                <linearGradient id="metalSheen" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#3c3c38"/><stop offset="45%" stop-color="#19191a"/><stop offset="55%" stop-color="#141416"/><stop offset="100%" stop-color="#050506"/></linearGradient>
-                <linearGradient id="woodSheen" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#8a4a2a"/><stop offset="50%" stop-color="#6b3419"/><stop offset="100%" stop-color="#3f1d0d"/></linearGradient>
-                <linearGradient id="skinSheen" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#d9a173"/><stop offset="55%" stop-color="#c48957"/><stop offset="100%" stop-color="#8f5f3b"/></linearGradient>
-                <linearGradient id="sleeveSheen" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#6b7a4f"/><stop offset="100%" stop-color="#3f4a2e"/></linearGradient>
-                <radialGradient id="flashCore" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#fffef0"/><stop offset="35%" stop-color="#ffe066"/><stop offset="70%" stop-color="#ff9d1f"/><stop offset="100%" stop-color="#ff9d1f" stop-opacity="0"/></radialGradient>
-            </defs>
+        <!-- Arma Canvas -->
+        <canvas id="weapon-layer" width="200" height="200"></canvas>
 
-            <g id="gun-rig" transform="translate(6,372) rotate(-21)">
-                <rect x="-60" y="-70" width="150" height="215" rx="30" fill="url(#sleeveSheen)" stroke="#0a0a08" stroke-width="3"/>
-                <rect x="-60" y="-14" width="150" height="16" fill="#2c331f" opacity="0.6"/>
-                <path d="M-10 -55 L70 -60 L96 -18 L100 40 L74 92 L-10 100 Z" fill="url(#woodSheen)" stroke="#0a0a08" stroke-width="3"/>
-                <path d="M6 -40 L64 -44 L82 -10 L84 30 L4 34 Z" fill="#b06a3d" opacity="0.35"/>
-                <path d="M96 -18 L300 -60 L322 -34 L296 32 L100 40 Z" fill="url(#woodSheen)" stroke="#0a0a08" stroke-width="3"/>
-                <path d="M112 -8 L292 -44 L306 -28 L284 20 L108 26 Z" fill="#c47a45" opacity="0.4"/>
-                <path d="M120 -46 L150 -66 L162 -50 L134 -28 Z" fill="url(#metalSheen)" stroke="#0a0a08" stroke-width="3"/>
-                <circle cx="156" cy="-58" r="9" fill="#141416" stroke="#0a0a08" stroke-width="2"/>
-                <path d="M150 -50 L235 -70 L255 -46 L232 -12 L148 -8 Z" fill="url(#metalSheen)" stroke="#0a0a08" stroke-width="3"/>
-                <path d="M244 -78 L268 -84 L272 -66 L250 -58 Z" fill="#0d0d0e" stroke="#0a0a08" stroke-width="2"/>
-                <rect x="253" y="-78" width="4" height="16" fill="#050506"/>
-                <path d="M112 6 Q99 34 116 58 Q136 75 159 62 Q173 39 162 13 Q140 -5 112 6 Z" fill="none" stroke="url(#metalSheen)" stroke-width="8" stroke-linejoin="round"/>
-                <rect x="129" y="9" width="10" height="30" rx="4" fill="#0d0d0e" stroke="#050506" stroke-width="1.5" transform="rotate(11 134 24)"/>
-                <path d="M310 -52 L410 -82 L420 -72 L330 -30 Z" fill="url(#metalSheen)" stroke="#0a0a08" stroke-width="3"/>
-                <path d="M394 -92 L424 -98 L432 -84 L406 -76 Z" fill="#0d0d0e" stroke="#0a0a08" stroke-width="2"/>
-                <rect x="410" y="-104" width="5" height="18" fill="#050506" transform="rotate(-12 410 -104)"/>
-                <circle cx="412" cy="-96" r="9" fill="none" stroke="#050506" stroke-width="3"/>
-                <path d="M410 -78 L444 -86 L452 -78 L418 -70 Z" fill="#0a0a0b" stroke="#050506" stroke-width="2"/>
-                <g transform="rotate(-6 210 14)">
-                    <rect x="158" y="-16" width="80" height="64" rx="20" fill="url(#sleeveSheen)" stroke="#0a0a08" stroke-width="3"/>
-                    <rect x="158" y="34" width="80" height="10" fill="#2c331f" opacity="0.6"/>
-                </g>
-                <path d="M200 -4 Q186 32 208 66 Q255 84 304 62 Q322 30 312 -8 Q262 -34 200 -4 Z" fill="url(#skinSheen)" stroke="#0a0a08" stroke-width="3"/>
-                <path d="M222 -14 Q230 -38 256 -42 L264 -14 Q244 -6 226 -2 Z" fill="#c48957" stroke="#0a0a08" stroke-width="2"/>
-                <path d="M258 -22 Q266 -44 292 -48 L300 -18 Q276 -12 260 -6 Z" fill="#c48957" stroke="#0a0a08" stroke-width="2"/>
-                <path d="M294 -28 Q302 -46 326 -50 L334 -20 Q310 -14 296 -8 Z" fill="#c48957" stroke="#0a0a08" stroke-width="2"/>
-                <path d="M230 -12 L258 -18 M266 -18 L294 -26 M302 -24 L328 -32" stroke="#8f5f3b" stroke-width="2" opacity="0.55" fill="none"/>
-                <path d="M206 28 Q192 46 204 66 L228 62 Q222 36 218 18 Z" fill="#d9a173" stroke="#0a0a08" stroke-width="2"/>
-                <path d="M42 18 Q30 54 54 84 Q92 100 128 82 Q146 54 138 22 Q96 -4 42 18 Z" fill="url(#skinSheen)" stroke="#0a0a08" stroke-width="3"/>
-                <path d="M56 6 Q62 -16 84 -20 L94 4 Q76 10 60 14 Z" fill="#c48957" stroke="#0a0a08" stroke-width="2"/>
-                <path d="M88 -2 Q96 -22 118 -26 L128 -2 Q108 4 92 8 Z" fill="#c48957" stroke="#0a0a08" stroke-width="2"/>
-                <path d="M118 8 Q133 -6 151 -2 Q161 15 150 31 Q134 27 120 22 Z" fill="#c48957" stroke="#0a0a08" stroke-width="2"/>
-                <path d="M64 8 L90 2 M98 0 L122 -6" stroke="#8f5f3b" stroke-width="2" opacity="0.55" fill="none"/>
-                <path d="M46 46 Q32 62 44 82 L68 76 Q60 52 56 36 Z" fill="#d9a173" stroke="#0a0a08" stroke-width="2"/>
-
-                <g id="muzzle-flash" style="display:none;">
-                    <circle cx="452" cy="-90" r="42" fill="url(#flashCore)"/>
-                    <polygon points="452,-136 462,-104 494,-114 470,-92 502,-74 466,-80 474,-46 452,-72 430,-46 438,-80 402,-74 434,-92 410,-114 442,-104" fill="#ffe066" opacity="0.95"/>
-                    <polygon points="452,-122 459,-102 480,-108 464,-94 484,-84 461,-88 466,-64 452,-82 438,-64 443,-88 420,-84 440,-94 424,-108 445,-102" fill="#fff8dd"/>
-                </g>
-            </g>
-        </svg>
-
-        <!-- Controles Mobile -->
         <div id="mobile-controls">
             <div id="camera-zone"></div>
             <div id="joystick-base"><div id="joystick-stick"></div></div>
@@ -487,52 +419,35 @@
     </div>
 
 <script>
-    // ============================================================
-    //  NOVA LÓGICA DE QUALIDADE E FILTRO CRT
-    // ============================================================
-    let crtEnabled = true; // Começa ativado por padrão
-    let gfxQuality = 'medium'; // 'low', 'medium', 'ultra'
+    let crtEnabled = true; 
+    let gfxQuality = 'medium'; 
 
     function toggleCRT(state) {
         crtEnabled = state;
         document.getElementById('crt-overlay').style.display = state ? 'block' : 'none';
-        
-        // Atualiza botoes Menu Principal
         document.getElementById('crt-on-main').classList.toggle('active', state);
         document.getElementById('crt-off-main').classList.toggle('active', !state);
-        // Atualiza botoes Pause Menu
         document.getElementById('crt-on-pause').classList.toggle('active', state);
         document.getElementById('crt-off-pause').classList.toggle('active', !state);
     }
 
     function setGraphics(quality) {
         gfxQuality = quality;
-        
-        // Atualiza botoes Menu Principal
         document.getElementById('gfx-low-main').classList.toggle('active', quality === 'low');
         document.getElementById('gfx-med-main').classList.toggle('active', quality === 'medium');
         document.getElementById('gfx-high-main').classList.toggle('active', quality === 'ultra');
-        
-        // Atualiza botoes Pause Menu
         document.getElementById('gfx-low-pause').classList.toggle('active', quality === 'low');
         document.getElementById('gfx-med-pause').classList.toggle('active', quality === 'medium');
         document.getElementById('gfx-high-pause').classList.toggle('active', quality === 'ultra');
 
-        // Ativa filtro CSS nativo se for Ultra
         if(quality === 'ultra') canvas.classList.add('gfx-ultra');
         else canvas.classList.remove('gfx-ultra');
 
-        // Redimensiona o canvas com a nova resolução
         resizeCanvas();
     }
     
-    // Inicia com estado padrão
     toggleCRT(crtEnabled);
 
-
-    // ============================================================
-    //  NAVEGAÇÃO DO MENU 
-    // ============================================================
     function openMenu(menuId) {
         document.getElementById('main-nav').style.display = 'none';
         document.getElementById('options-panel').style.display = 'none';
@@ -545,42 +460,34 @@
         }
     }
 
-    // ============================================================
-    //  ESTADO GERAL DO JOGO E MÚSICA
-    // ============================================================
     let gameState = 'MENU';
     let startTime = 0; let survivalTime = 0; let lastTime = 0;
     let killCount = 0;
     let particles = [];
     let tracers = [];
 
-    // Músicas
     const menuMusic = document.getElementById('menu-music');
     const gameplayMusic = document.getElementById('gameplay-music');
     let gameplayMusicEnabled = true;
 
-    // Funções de Controle da Música da Gameplay
     function toggleGameplayMusic(state) {
         gameplayMusicEnabled = state;
-        
-        // Atualiza botoes Menu Principal
         document.getElementById('music-on-main').classList.toggle('active', state);
         document.getElementById('music-off-main').classList.toggle('active', !state);
-        // Atualiza botoes Pause Menu
         document.getElementById('music-on-pause').classList.toggle('active', state);
         document.getElementById('music-off-pause').classList.toggle('active', !state);
 
         if (!state) {
             gameplayMusic.pause();
         } else if (gameState === 'PLAYING') {
-            gameplayMusic.play().catch(e => console.log("Aguardando interação para áudio."));
+            gameplayMusic.play().catch(e => console.log("Aguardando interação."));
         }
     }
 
     function playGameplayMusic() {
         if (gameplayMusicEnabled && gameState === 'PLAYING') {
             gameplayMusic.currentTime = 0;
-            gameplayMusic.play().catch(e => console.log("Aguardando interação para áudio."));
+            gameplayMusic.play().catch(e => console.log("Aguardando interação."));
         }
     }
 
@@ -591,7 +498,7 @@
 
     function playMenuMusic() {
         if (gameState === 'MENU') {
-            menuMusic.play().catch(erro => console.log("Aguardando interação para áudio."));
+            menuMusic.play().catch(erro => console.log("Aguardando interação."));
         }
     }
     function stopMenuMusic() { menuMusic.pause(); menuMusic.currentTime = 0; }
@@ -601,20 +508,19 @@
     document.body.addEventListener('touchstart', checkInteraction);
 
     const canvas = document.getElementById('gameCanvas');
-    const ctx = canvas.getContext('2d', { alpha: false }); // alpha false melhora performance levemente
+    const ctx = canvas.getContext('2d', { alpha: false }); 
 
-    // Modificado para suportar o sistema de Qualidade Gráfica
     function resizeCanvas() {
         let w = window.innerWidth; let h = window.innerHeight;
-        let maxSize = 320; // Médio
+        let maxSize = 320; 
         
-        if (gfxQuality === 'low') maxSize = 200; // Bem leve
-        if (gfxQuality === 'ultra') maxSize = 480; // Alta resolução (mas não 1080p para não travar o celular com raycasting)
+        if (gfxQuality === 'low') maxSize = 200; 
+        if (gfxQuality === 'ultra') maxSize = 480; 
 
         if (w > h) { canvas.width = maxSize; canvas.height = Math.floor(maxSize * (h / w)); } 
         else { canvas.height = maxSize; canvas.width = Math.floor(maxSize * (w / h)); }
         
-        syncFloorCanvasSize(); // Sempre ressincronizar o chão após mudar resolução
+        syncFloorCanvasSize(); 
     }
     window.addEventListener('resize', resizeCanvas); 
 
@@ -625,9 +531,6 @@
         document.getElementById('control-mode-row-pause').style.display = 'flex';
     }
 
-    // ============================================================
-    //  TEXTURAS PROCEDURAIS
-    // ============================================================
     const TEX_SIZE = 48;
     function makeTexCanvas() {
         let c = document.createElement('canvas'); c.width = TEX_SIZE; c.height = TEX_SIZE; return c;
@@ -745,11 +648,8 @@
         floorCanvas.width = canvas.width; floorCanvas.height = canvas.height; 
     }
     
-    resizeCanvas(); // Chamada inicial
+    resizeCanvas(); 
 
-    // ============================================================
-    //  SPRITES E CONFIGURAÇÕES
-    // ============================================================
     const NUM_STARS = 45;
     const starField = Array.from({ length: NUM_STARS }, () => ({ x: Math.random(), y: Math.random() * 0.78, r: 0.4 + Math.random() * 0.9, a: 0.3 + Math.random() * 0.6 }));
     const LAMP_W = 26, LAMP_H = 120;
@@ -798,9 +698,6 @@
     const soldierDownCanvas = document.createElement('canvas'); soldierDownCanvas.width = SPR_W; soldierDownCanvas.height = SPR_H;
     (function(){ let t = soldierDownCanvas.getContext('2d'); t.save(); t.translate(SPR_W/2, SPR_H - 18); t.rotate(Math.PI/2); t.translate(-SPR_W/2, -(SPR_H - 55)); t.drawImage(soldierCanvas, 0, 0); t.restore(); })();
 
-    // ============================================================
-    //  ÁUDIO E AMBIÊNCIA (MANTIDO)
-    // ============================================================
     let audioCtx = null;
     function ensureAudio() {
         if (!audioCtx) { try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e) {} }
@@ -877,9 +774,6 @@
         ambienceTimers.push(setTimeout(scheduleDistantGunfire, 1600 + Math.random() * 3200));
     }
 
-    // ============================================================
-    //  JOGADOR E OPÇÕES
-    // ============================================================
     let player = {
         x: 1.5, y: 1.5, dir: 0, hp: 100, fov: Math.PI / 3, isAiming: false, moveFwd: 0, moveStr: 0,
         ammo: 30, maxAmmo: 30, reloading: false, reloadTimer: 0, shootCd: 0, shakeTimer: 0, firing: false, lastDamageTime: 0
@@ -921,9 +815,6 @@
     document.getElementById('pause-controls-standard-btn').addEventListener('click', () => setControlMode('standard'));
     document.getElementById('pause-controls-top-btn').addEventListener('click', () => setControlMode('top'));
 
-    // ============================================================
-    //  MAPA
-    // ============================================================
     const CITY_SIZE = 65, BLOCK = 4, STREET = 3, UNIT = BLOCK + STREET, PLAZA_RADIUS = 5;
     function generateCityMap(size) {
         let m = []; const center = Math.floor(size / 2);
@@ -977,9 +868,6 @@
         }
     }
 
-    // ============================================================
-    //  CONTROLES IN-GAME
-    // ============================================================
     const joyBase = document.getElementById('joystick-base'), joyStick = document.getElementById('joystick-stick');
     let joyActive = false, joyCenter = { x: 0, y: 0 };
     joyBase.addEventListener('touchstart', (e) => { e.preventDefault(); joyActive = true; let rect = joyBase.getBoundingClientRect(); joyCenter.x = rect.left + rect.width / 2; joyCenter.y = rect.top + rect.height / 2; updateJoystick(e.targetTouches[0]); });
@@ -1013,22 +901,112 @@
     document.addEventListener('mousemove', (e) => { if (document.pointerLockElement === canvas && gameState === 'PLAYING') player.dir += e.movementX * 0.0028 * sensMultiplier; });
     function toggleAim(state) { if (isTouchDevice) return; player.isAiming = state; player.fov = player.isAiming ? (Math.PI / 3) * 0.6 : (Math.PI / 3); }
 
-    // ============================================================
-    //  LÓGICA DA ARMA
-    // ============================================================
-    const weaponLayer = document.getElementById('weapon-layer'), muzzleFlash = document.getElementById('muzzle-flash'), damageFlash = document.getElementById('damage-flash'), bloodScreen = document.getElementById('blood-screen');
-    const RELOAD_DURATION = 2.0; let weaponBobPhase = 0, weaponKick = 0, weaponTremor = 0, aimBlend = 0, weaponAimShiftX = 0, weaponAimShiftY = 0;
-    function updateWeaponLayoutMetrics() { let vw = window.innerWidth, vh = window.innerHeight, vmin = Math.min(vw, vh), layerW = Math.max(250, Math.min(0.82 * vmin, 460)), layerLeftPx = vw * -0.04; weaponAimShiftX = (vw / 2) - (layerLeftPx + layerW / 2); weaponAimShiftY = -vh * 0.17; }
+    const weaponLayer = document.getElementById('weapon-layer');
+    const weaponCtx = weaponLayer.getContext('2d');
+    weaponCtx.imageSmoothingEnabled = false; 
+    
+    const damageFlash = document.getElementById('damage-flash'), bloodScreen = document.getElementById('blood-screen');
+    const RELOAD_DURATION = 2.0; 
+    let weaponBobPhase = 0, weaponKick = 0, weaponTremor = 0, aimBlend = 0;
+    let weaponAimShiftX = 0, weaponAimShiftY = 0;
+    let lastFiringState = null;
+
+    function updateWeaponLayoutMetrics() { 
+        let vh = window.innerHeight;
+        weaponAimShiftX = 0; 
+        weaponAimShiftY = -vh * 0.02; 
+    }
     window.addEventListener('resize', updateWeaponLayoutMetrics);
+
+    function drawRetroWeapon(ctx, isFiring, isAiming) {
+        ctx.clearRect(0, 0, 200, 200);
+        const r = (x, y, w, h, c) => { ctx.fillStyle = c; ctx.fillRect(x*2, y*2, w*2, h*2); };
+        const f = (x, y, w, h, c) => { ctx.fillStyle = c; ctx.fillRect(x*2, (y)*2, w*2, h*2); };
+
+        if (isFiring || isAiming) {
+            // MODO MIRA RIGOROSA COMPACTA E MAIS ABAIXO DA MIRA
+            let ry = isFiring ? 4 : 0; 
+
+            r(18, 70+ry, 20, 45, '#2d3310'); 
+            r(22, 60+ry, 16, 45, '#4b5320'); 
+            r(32, 52+ry, 12, 20, '#d99c75'); 
+
+            r(62, 70+ry, 20, 45, '#2d3310'); 
+            r(58, 60+ry, 16, 45, '#4b5320'); 
+            r(52, 52+ry, 12, 20, '#d99c75'); 
+
+            r(40, 58+ry, 20, 45, '#382110'); 
+            r(42, 58+ry, 16, 45, '#5c3a21'); 
+            r(45, 58+ry, 10, 45, '#785132'); 
+
+            r(43, 44+ry, 14, 25, '#1d1d24');
+            r(45, 44+ry, 10, 25, '#3d3d45');
+            r(47, 44+ry, 6, 25, '#6c6c7a'); 
+
+            r(38, 38+ry, 24, 14, '#111115'); 
+            r(41, 34+ry, 18, 8, '#25252b');  
+            r(44, 32+ry, 12, 4, '#111');   
+            r(47, 34+ry, 6, 4, '#050508');   
+
+            if (isFiring) {
+                f(45, 15+ry, 10, 14, '#fffef0');
+                f(38, 20+ry, 24, 6, '#fffef0');
+                f(42, 10+ry, 16, 22, '#ffe066');
+                f(32, 18+ry, 36, 10, '#ffe066');
+                f(47, 5+ry, 6, 8, '#ff9d1f');
+                f(26, 19+ry, 8, 6, '#ff9d1f');
+                f(66, 19+ry, 8, 6, '#ff9d1f');
+            }
+
+        } else {
+            // MODO REPOUSO COMPACTO
+            let ry = 0;
+            r(55, 75+ry, 45, 30, '#2d3310'); 
+            r(60, 80+ry, 40, 25, '#4b5320'); 
+            r(50, 65+ry, 18, 18, '#b37452'); 
+            r(53, 67+ry, 14, 14, '#d99c75'); 
+
+            r(44, 45+ry, 12, 15, '#382110'); r(45, 45+ry, 8, 15, '#5c3a21'); r(46, 45+ry, 2, 15, '#785132');
+            r(42, 60+ry, 16, 20, '#382110'); r(43, 60+ry, 12, 20, '#5c3a21'); r(45, 60+ry, 3, 20, '#785132');
+            r(38, 80+ry, 24, 25, '#382110'); r(40, 80+ry, 18, 25, '#5c3a21'); r(42, 80+ry, 4, 25, '#785132');
+
+            r(44, 50+ry, 12, 20, '#1d1d24'); r(45, 50+ry, 8, 20, '#3d3d45'); r(46, 50+ry, 2, 20, '#6c6c7a'); 
+            r(49, 55+ry, 4, 8, '#111'); r(49, 56+ry, 2, 6, '#888');
+
+            r(47, 15+ry, 6, 35, '#1a1a1a'); r(48, 15+ry, 2, 35, '#5b5b66'); 
+            r(45, 30+ry, 10, 20, '#382110'); r(46, 30+ry, 8, 20, '#5c3a21'); r(47, 30+ry, 2, 20, '#785132'); 
+            r(45, 30+ry, 10, 3, '#3d3d45');  
+
+            r(49, 10+ry, 2, 5, '#111'); r(45, 12+ry, 2, 5, '#111'); r(53, 12+ry, 2, 5, '#111'); 
+            r(40, 70+ry, 20, 8, '#222'); r(44, 68+ry, 12, 10, '#333'); r(48, 68+ry, 4, 6, '#000'); 
+
+            r(-10, 75, 45, 30, '#2d3310'); r(-5, 70, 40, 30, '#4b5320'); r(5, 65, 25, 20, '#5e6829'); 
+            r(22, 45, 18, 25, '#b37452'); r(25, 42, 14, 20, '#d99c75'); r(29, 44, 8, 14, '#f5c2a3'); 
+            r(36, 36+ry, 9, 5, '#d99c75'); r(36, 36+ry, 7, 2, '#f5c2a3'); 
+            r(37, 42+ry, 8, 5, '#d99c75'); r(37, 42+ry, 6, 2, '#f5c2a3'); 
+            r(38, 48+ry, 7, 5, '#d99c75'); r(38, 48+ry, 5, 2, '#f5c2a3'); 
+        }
+    }
+
+    function updateWeaponCanvas() {
+        let isF = (player.firing && !player.reloading && gameState === 'PLAYING');
+        let isA = (player.isAiming && !player.reloading && gameState === 'PLAYING');
+        let currentState = isF + "-" + isA;
+        if (currentState !== lastFiringState) {
+            drawRetroWeapon(weaponCtx, isF, isA);
+            lastFiringState = currentState;
+        }
+    }
     
     function startReload() {
         if (player.reloading || player.ammo === player.maxAmmo || gameState !== 'PLAYING') return;
-        player.reloading = true; player.firing = false; muzzleFlash.style.display = 'none'; player.reloadTimer = RELOAD_DURATION; document.getElementById('reload-msg').style.display = 'block';
+        player.reloading = true; player.firing = false; player.reloadTimer = RELOAD_DURATION; document.getElementById('reload-msg').style.display = 'block';
     }
     function fireBullet() {
         if (player.ammo <= 0) { startReload(); return; }
         player.ammo--; document.getElementById('ammo-val').innerText = player.ammo;
-        muzzleFlash.style.display = 'block'; weaponKick = 1; weaponTremor = 1; player.shakeTimer = Math.max(player.shakeTimer, 0.09); playShot(true);
+        
+        weaponKick = 1; weaponTremor = 1; player.shakeTimer = Math.max(player.shakeTimer, 0.09); playShot(true);
         enemies.forEach((enemy) => {
             if (enemy.dying) return;
             let dx = enemy.x - player.x, dy = enemy.y - player.y, diff = Math.atan2(dy, dx) - player.dir;
@@ -1043,18 +1021,41 @@
         });
         if (player.ammo === 0) startReload();
     }
+    
     function updateWeaponTransform(dt, fwd, str) {
         let speedFrac = Math.min(1, Math.hypot(fwd, str)), moving = speedFrac > 0.05 && !player.reloading && gameState === 'PLAYING';
-        let aimTarget = (player.isAiming && !player.reloading && gameState === 'PLAYING') ? 1 : 0; aimBlend += (aimTarget - aimBlend) * Math.min(1, dt * 9);
+        let aimTarget = (player.isAiming && !player.reloading && gameState === 'PLAYING') ? 1 : 0; 
+        aimBlend += (aimTarget - aimBlend) * Math.min(1, dt * 12);
         if (Math.abs(aimTarget - aimBlend) < 0.001) aimBlend = aimTarget;
+        
         weaponBobPhase += dt * (moving ? (player.isAiming ? 7.5 : 10.5) * (0.55 + 0.45 * speedFrac) : 1.1);
-        let bobAmpMul = 1 - aimBlend * 0.75, bobX = Math.sin(weaponBobPhase) * (moving ? 7 : 1.2) * bobAmpMul, bobY = Math.abs(Math.sin(weaponBobPhase * (moving ? 2 : 1))) * (moving ? 7.5 : 0.8) * bobAmpMul;
-        weaponKick = Math.max(0, weaponKick - dt * 7.5); let kickY = weaponKick * 16, kickRot = -weaponKick * 3.2;
-        weaponTremor = Math.max(0, weaponTremor - dt * 11); let tremorMag = weaponTremor * weaponTremor * 9, tremorX = (Math.random() * 2 - 1) * tremorMag, tremorY = (Math.random() * 2 - 1) * tremorMag * 0.6, tremorRot = (Math.random() * 2 - 1) * weaponTremor * 1.6;
+        let bobAmpMul = 1 - aimBlend * 0.75;
+        let bobX = Math.sin(weaponBobPhase) * (moving ? 8 : 1.2) * bobAmpMul;
+        let bobY = Math.abs(Math.sin(weaponBobPhase)) * (moving ? 6 : 0.8) * bobAmpMul;
+        
+        weaponKick = Math.max(0, weaponKick - dt * 7.5); 
+        let kickY = weaponKick * 6; 
+        
+        weaponTremor = Math.max(0, weaponTremor - dt * 11); 
+        let tremorMag = weaponTremor * weaponTremor * 8; 
+        let tremorX = (Math.random() * 2 - 1) * tremorMag; 
+        let tremorY = (Math.random() * 2 - 1) * tremorMag * 0.4; 
+        let tremorRot = (Math.random() * 2 - 1) * weaponTremor * 0.3;
+
         let reloadX = 0, reloadY = 0, reloadRot = 0;
-        if (player.reloading) { let p = 1 - Math.max(0, player.reloadTimer) / RELOAD_DURATION, curve = Math.sin(Math.min(1, p) * Math.PI); reloadX = -curve * 55; reloadY = curve * 60; reloadRot = -curve * 26; bobX *= 0.15; bobY *= 0.15; }
-        let ease = aimBlend * aimBlend * (3 - 2 * aimBlend), aimX = ease * weaponAimShiftX, aimY = ease * weaponAimShiftY, aimRot = ease * 19.5, aimScale = 1 + ease * 0.22;
-        weaponLayer.style.transform = `translate(${(bobX + reloadX + aimX + tremorX).toFixed(2)}px, ${(bobY + kickY + reloadY + aimY + tremorY).toFixed(2)}px) rotate(${(kickRot + reloadRot + aimRot + tremorRot).toFixed(2)}deg) scale(${aimScale.toFixed(3)})`;
+        if (player.reloading) { 
+            let p = 1 - Math.max(0, player.reloadTimer) / RELOAD_DURATION, curve = Math.sin(Math.min(1, p) * Math.PI); 
+            reloadX = curve * 12; reloadY = curve * 100; reloadRot = curve * 10; bobX *= 0.15; bobY *= 0.15; 
+        }
+        
+        let ease = aimBlend * aimBlend * (3 - 2 * aimBlend);
+        let aimX = ease * weaponAimShiftX; 
+        let aimY = ease * weaponAimShiftY; 
+        let aimScale = 1 + ease * 0.15; 
+
+        weaponLayer.style.transform = `translate(${(bobX + reloadX + aimX + tremorX).toFixed(2)}px, ${(bobY + kickY + reloadY + aimY + tremorY).toFixed(2)}px) rotate(${tremorRot + reloadRot}deg) scale(${aimScale.toFixed(3)})`;
+        
+        updateWeaponCanvas(); 
     }
 
     document.getElementById('shoot-btn').addEventListener('touchstart', (e) => { e.preventDefault(); ensureAudio(); player.firing = true; });
@@ -1069,9 +1070,6 @@
     shootZoneTop.addEventListener('touchstart', (e) => { e.preventDefault(); ensureAudio(); player.firing = true; shootZoneTop.classList.add('active'); });
     shootZoneTop.addEventListener('touchend', (e) => { e.preventDefault(); player.firing = false; shootZoneTop.classList.remove('active'); });
 
-    // ============================================================
-    //  UPDATE E RENDERIZAÇÃO ADAPTADA À QUALIDADE
-    // ============================================================
     function update(dt) {
         survivalTime = Math.floor((performance.now() - startTime) / 1000);
         document.getElementById('time-val').innerText = survivalTime; document.getElementById('hp-val').innerText = Math.max(0, Math.floor(player.hp)); document.getElementById('hp-bar').style.width = Math.max(0, player.hp) + '%';
@@ -1079,7 +1077,7 @@
         if (player.shakeTimer > 0) player.shakeTimer -= dt;
         if (player.firing && !player.reloading && gameState === 'PLAYING') {
             player.shootCd -= dt; if (player.shootCd <= 0) { fireBullet(); player.shootCd = FIRE_RATE; }
-        } else muzzleFlash.style.display = 'none';
+        }
         if (player.hp > 0 && player.hp < 100 && (performance.now() - player.lastDamageTime) > REGEN_DELAY) player.hp = Math.min(100, player.hp + REGEN_RATE * dt);
         if (player.reloading) { player.reloadTimer -= dt; if (player.reloadTimer <= 0) { player.reloading = false; player.ammo = player.maxAmmo; document.getElementById('ammo-val').innerText = player.ammo; document.getElementById('reload-msg').style.display = 'none'; } }
         spawnTimer += dt; if (spawnTimer > Math.max(1.4, 3.6 - (survivalTime * 0.04)) && enemies.length < 14) { spawnEnemy(); spawnTimer = 0; }
@@ -1116,7 +1114,6 @@
         if (player.shakeTimer > 0) { let s = 4 + player.shakeTimer * 26; ctx.translate((Math.random()*2-1) * s, (Math.random()*2-1) * s); }
         let isNight = gameMode === 'night';
 
-        // CÉU
         let skyGrad = ctx.createLinearGradient(0, 0, 0, canvas.height / 2);
         if (isNight) {
             skyGrad.addColorStop(0, '#03040a'); skyGrad.addColorStop(1, '#1b2438'); ctx.fillStyle = skyGrad; ctx.fillRect(0, 0, canvas.width, canvas.height / 2);
@@ -1132,29 +1129,23 @@
             skyGrad.addColorStop(0, '#8a97a8'); skyGrad.addColorStop(1, '#c9b896'); ctx.fillStyle = skyGrad; ctx.fillRect(0, 0, canvas.width, canvas.height / 2);
         }
 
-        // SILHUETAS
         ctx.fillStyle = isNight ? 'rgba(4,3,6,0.88)' : 'rgba(40,32,26,0.5)';
         for (let i = 0; i < 8; i++) { let bx = (i * canvas.width / 7.3) % canvas.width, bh = canvas.height * (0.04 + (i % 4) * 0.025); ctx.fillRect(bx, canvas.height/2 - bh, canvas.width/11, bh); ctx.beginPath(); ctx.moveTo(bx, canvas.height/2 - bh); ctx.lineTo(bx + canvas.width/22, canvas.height/2 - bh - canvas.height*0.03); ctx.lineTo(bx + canvas.width/11, canvas.height/2 - bh); ctx.closePath(); ctx.fill(); }
         ctx.fillStyle = isNight ? 'rgba(3,2,5,0.92)' : 'rgba(30,24,20,0.55)'; let tX = canvas.width * 0.5; ctx.fillRect(tX - 6, canvas.height/2 - canvas.height*0.14, 12, canvas.height*0.14); ctx.beginPath(); ctx.moveTo(tX - 8, canvas.height/2 - canvas.height*0.14); ctx.lineTo(tX, canvas.height/2 - canvas.height*0.19); ctx.lineTo(tX + 8, canvas.height/2 - canvas.height*0.14); ctx.closePath(); ctx.fill();
 
         const pDist = (canvas.width / 2) / Math.tan(player.fov / 2);
         
-        // CHÃO - Adaptado à Qualidade
         let fw = canvas.width, fh = canvas.height, hH = Math.floor(fh / 2), rH = fh - hH;
         if (gfxQuality === 'low') {
-            // Chão ultra leve (apenas cor sólida e gradiente simples)
             let gradFloor = ctx.createLinearGradient(0, hH, 0, fh);
             if(isNight) { gradFloor.addColorStop(0, '#040610'); gradFloor.addColorStop(1, '#1a1820'); }
             else { gradFloor.addColorStop(0, '#2b2926'); gradFloor.addColorStop(1, '#403c35'); }
             ctx.fillStyle = gradFloor;
             ctx.fillRect(0, hH, fw, rH);
         } else {
-            // Chão pesado (Floorcasting original) - Medium e Ultra
             if (rH > 0 && fw > 0) {
                 let img = floorCtx.getImageData(0, hH, fw, rH), data = img.data, pZ = 0.5 * pDist, aL = player.dir - player.fov / 2, aR = player.dir + player.fov / 2;
                 let dX0 = Math.cos(aL), dY0 = Math.sin(aL), dX1 = Math.cos(aR), dY1 = Math.sin(aR), fDiv = isNight ? 7 : 10, fMax = isNight ? 0.93 : 0.82, amb = isNight ? 0.32 : 1, tR = isNight ? 9 : 0, tG = isNight ? 12 : 0, tB = isNight ? 24 : 0;
-                
-                // Se for ultra escurecemos um pouco menos as texturas
                 if(gfxQuality === 'ultra') { amb = isNight ? 0.45 : 1.1; }
 
                 for (let y = hH; y < fh; y++) {
@@ -1170,7 +1161,6 @@
             }
         }
 
-        // RAYCASTING DAS PAREDES
         let zBuff = [];
         for (let x = 0; x < canvas.width; x++) {
             let cx = 2 * x / canvas.width - 1, rA = player.dir + cx * (player.fov / 2), dX = Math.cos(rA), dY = Math.sin(rA), mX = Math.floor(player.x), mY = Math.floor(player.y), ddX = Math.abs(1 / dX), ddY = Math.abs(1 / dY);
@@ -1184,13 +1174,12 @@
             let tX = Math.floor(wX * TEX_SIZE); if (side === 0 && dX > 0) tX = TEX_SIZE - tX - 1; if (side === 1 && dY < 0) tX = TEX_SIZE - tX - 1;
             ctx.drawImage(wallTextures[wT] || wallTextures[1], tX, 0, 1, TEX_SIZE, x, st, 1, en - st);
             
-            // Sombras das paredes com base na Qualidade Gráfica
             let fA = 0;
             if (gfxQuality === 'low') {
-                fA = (side === 1 ? 0.3 : 0); // Sem fog, apenas sombra lateral leve
+                fA = (side === 1 ? 0.3 : 0); 
             } else {
                 fA = Math.min(0.88, Math.min(0.85, pD / 9) + (side === 1 ? 0.15 : 0));
-                if(gfxQuality === 'ultra') fA *= 1.1; // Sombras ligeiramente mais escuras no fundo
+                if(gfxQuality === 'ultra') fA *= 1.1; 
             }
 
             if(fA > 0) {
@@ -1199,7 +1188,6 @@
             }
         }
 
-        // LUZES DOS POSTES (Ignoradas no Low para poupar bateria)
         if (isNight) {
             lampPosts.map(l => ({ l, d: (l.x - player.x) ** 2 + (l.y - player.y) ** 2 })).filter(o => o.d < 130).sort((a, b) => b.d - a.d).forEach(item => {
                 let l = item.l, d = Math.sqrt(item.d), ang = Math.atan2(l.y - player.y, l.x - player.x) - player.dir;
@@ -1224,7 +1212,6 @@
             });
         }
 
-        // INIMIGOS
         enemies.map(e => ({ e, d: (e.x-player.x)**2 + (e.y-player.y)**2 })).sort((a,b) => b.d - a.d).forEach(item => {
             let e = item.e, d = Math.sqrt(item.d), ang = Math.atan2(e.y - player.y, e.x - player.x) - player.dir;
             while(ang < -Math.PI) ang += Math.PI*2; while(ang > Math.PI) ang -= Math.PI*2;
@@ -1234,7 +1221,6 @@
                 let left = sX - sW / 2, cS = Math.max(1, Math.floor(sW / SPR_W));
                 for (let x = 0; x < sW; x += cS) { let pX = Math.floor(left + x); if (pX >= 0 && pX < canvas.width && zBuff[pX] > d) ctx.drawImage(img, Math.floor((x / sW) * SPR_W), 0, cS, SPR_H, pX, dY, cS, sH); }
                 
-                // Sombras do inimigo
                 if (d > 3 && gfxQuality !== 'low') { 
                     let sOp = gfxQuality === 'ultra' ? Math.min(0.85, (d-2)/6) : Math.min(0.7, (d-3)/8);
                     ctx.fillStyle = `rgba(5,5,5,${sOp})`; ctx.fillRect(left, dY, sW, sH); 
@@ -1242,7 +1228,6 @@
             }
         });
 
-        // TRAÇANTES (Tiros Inimigos)
         tracers.forEach(tr => {
             let ang = Math.atan2(tr.ey - player.y, tr.ex - player.x) - player.dir;
             while(ang < -Math.PI) ang += Math.PI*2; while(ang > Math.PI) ang -= Math.PI*2;
@@ -1250,7 +1235,6 @@
             ctx.strokeStyle = `rgba(255,220,120,${tr.life/0.12})`; ctx.lineWidth = gfxQuality === 'ultra' ? 3 : 2; ctx.beginPath(); ctx.moveTo(sX, canvas.height/2 - 6); ctx.lineTo(canvas.width/2, canvas.height/2); ctx.stroke();
         });
 
-        // PARTICULAS E MIRA
         particles.forEach(p => { ctx.fillStyle = p.color; ctx.globalAlpha = Math.max(0, p.life / 0.6); ctx.fillRect(canvas.width/2 + p.x*0.3, canvas.height/2 + p.y*0.3, p.size || 2, p.size || 2); ctx.globalAlpha = 1; });
         ctx.strokeStyle = "rgba(255, 255, 255, 0.65)"; ctx.lineWidth = 1; let cx2 = canvas.width/2, cy2 = canvas.height/2; ctx.beginPath(); ctx.moveTo(cx2-6, cy2); ctx.lineTo(cx2-2, cy2); ctx.moveTo(cx2+2, cy2); ctx.lineTo(cx2+6, cy2); ctx.moveTo(cx2, cy2-6); ctx.lineTo(cx2, cy2-2); ctx.moveTo(cx2, cy2+2); ctx.lineTo(cx2, cy2+6); ctx.stroke();
         ctx.restore();
@@ -1262,9 +1246,6 @@
         requestAnimationFrame(gameLoop);
     }
 
-    // ============================================================
-    //  FLUXO DO JOGO
-    // ============================================================
     document.getElementById('restart-btn').onclick = () => { ensureAudio(); startGame(); };
     document.getElementById('gameover-menu-btn').onclick = () => backToMenu();
     const pauseBtn = document.getElementById('pause-btn'), pauseScreen = document.getElementById('pause-screen');
@@ -1275,7 +1256,7 @@
 
     function pauseGame() {
         if (gameState !== 'PLAYING') return; gameState = 'PAUSED';
-        player.firing = false; muzzleFlash.style.display = 'none'; stopAmbience();
+        player.firing = false; stopAmbience();
         gameplayMusic.pause();
         pauseScreen.style.display = 'flex'; pauseBtn.style.display = 'none';
         document.getElementById('mobile-controls').style.display = 'none';
@@ -1285,14 +1266,14 @@
         if (gameState !== 'PAUSED') return; gameState = 'PLAYING';
         pauseScreen.style.display = 'none'; pauseBtn.style.display = 'flex';
         if (gameplayMusicEnabled) {
-            gameplayMusic.play().catch(e => console.log("Aguardando interação para áudio."));
+            gameplayMusic.play().catch(e => console.log("Aguardando interação."));
         }
         document.getElementById('mobile-controls').style.display = isTouchDevice ? 'block' : 'none';
         lastTime = 0; startAmbience(); if (!isTouchDevice) canvas.requestPointerLock();
     }
     function backToMenu() {
         gameState = 'MENU'; playMenuMusic(); stopAmbience(); resetGameplayMusic();
-        player.firing = false; muzzleFlash.style.display = 'none';
+        player.firing = false; 
         if (document.pointerLockElement === canvas) document.exitPointerLock();
         document.getElementById('hud').style.display = 'none'; document.getElementById('mobile-controls').style.display = 'none'; document.getElementById('pc-hint').style.display = 'none'; document.getElementById('reload-msg').style.display = 'none'; weaponLayer.style.display = 'none'; pauseScreen.style.display = 'none'; pauseBtn.style.display = 'none'; document.getElementById('gameover-screen').style.display = 'none';
         document.getElementById('menu-wrapper').style.display = 'flex';
@@ -1301,12 +1282,13 @@
     function startGame() {
         stopMenuMusic(); 
         
-        // CORRIGIDO: Garante que o estado seja alterado antes para permitir o play imediato
         gameState = 'PLAYING';
         resetGameplayMusic(); 
         if (gameplayMusicEnabled) {
             playGameplayMusic();
         }
+
+        drawRetroWeapon(weaponCtx, false, false);
 
         document.getElementById('menu-wrapper').style.display = 'none'; document.getElementById('gameover-screen').style.display = 'none'; pauseScreen.style.display = 'none'; document.getElementById('hud').style.display = 'flex'; pauseBtn.style.display = 'flex'; weaponLayer.style.display = 'block'; updateWeaponLayoutMetrics(); document.getElementById('pc-hint').style.display = isTouchDevice ? 'none' : 'block'; document.getElementById('mobile-controls').style.display = isTouchDevice ? 'block' : 'none';
         player.x = PLAYER_START_X; player.y = PLAYER_START_Y; player.hp = 100; player.dir = 0; player.ammo = player.maxAmmo; player.reloading = false; player.shootCd = 0; player.shakeTimer = 0; player.firing = false; player.lastDamageTime = performance.now();
@@ -1314,7 +1296,7 @@
         document.getElementById('ammo-val').innerText = player.ammo; document.getElementById('ammo-max').innerText = player.maxAmmo; document.getElementById('kills-val').innerText = 0; document.getElementById('reload-msg').style.display = 'none'; enemies = []; particles = []; tracers = []; spawnTimer = 0; startTime = performance.now(); killCount = 0; startAmbience();
     }
     function gameOver() {
-        gameState = 'GAMEOVER'; stopAmbience(); player.firing = false; muzzleFlash.style.display = 'none';
+        gameState = 'GAMEOVER'; stopAmbience(); player.firing = false; 
         resetGameplayMusic();
         document.getElementById('hud').style.display = 'none'; document.getElementById('mobile-controls').style.display = 'none'; document.getElementById('pc-hint').style.display = 'none'; document.getElementById('reload-msg').style.display = 'none'; weaponLayer.style.display = 'none'; pauseBtn.style.display = 'none';
         document.getElementById('gameover-screen').style.display = 'flex'; document.getElementById('final-time').innerText = survivalTime; document.getElementById('final-kills').innerText = killCount;
