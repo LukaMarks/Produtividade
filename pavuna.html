@@ -150,37 +150,26 @@
             color: #d4c5a9; font-size: 0.75rem; text-shadow: 1px 1px #000; z-index: 10; opacity: 0.75;
         }
 
-        /* ARMA E EFEITOS (Visual Melhorado) */
+        /* ARMA E EFEITOS — estilo fuzil de ferrolho WWII (referência: mão nua segurando
+           o fuzil, cano na diagonal saindo do canto inferior esquerdo em direção ao
+           canto superior direito). A transformação (bob de caminhada, coice de tiro,
+           giro de recarga) é controlada 100% via JS a cada frame em vez de @keyframes. */
         #weapon-layer {
-            position: absolute; bottom: 0; left: 50%; transform: translateX(-50%);
-            width: 190px; height: 240px; z-index: 5; pointer-events: none; display: none;
+            position: absolute; bottom: -2%; left: -4%; transform: translate(0,0);
+            transform-origin: 10% 90%;
+            /* vmin (o menor entre largura/altura da tela) em vez de vw: assim o
+               tamanho da arma não dispara em telas largas-e-baixas nem fica minúsculo
+               em telas estreitas-e-altas — cresce de forma previsível em qualquer tela.
+               A altura segue a largura automaticamente via aspect-ratio (proporção
+               do viewBox do SVG, 520x440), então nunca fica desproporcional. */
+            width: clamp(250px, 82vmin, 460px);
+            aspect-ratio: 520 / 440;
+            z-index: 5; pointer-events: none; display: none;
+            filter: drop-shadow(0 8px 10px rgba(0,0,0,0.6));
+            will-change: transform;
         }
-        .recoil-anim { animation: recoil 0.12s ease-out; }
-        @keyframes recoil {
-            0% { transform: translateX(-50%) translateY(0) rotate(0deg); }
-            40% { transform: translateX(-50%) translateY(22px) rotate(-4deg); }
-            100% { transform: translateX(-50%) translateY(0) rotate(0deg); }
-        }
-        .reload-anim { animation: reloadTilt 1.9s ease-in-out; }
-        @keyframes reloadTilt {
-            0% { transform: translateX(-50%) translateY(0) rotate(0deg); }
-            25% { transform: translateX(-65%) translateY(10px) rotate(-18deg); }
-            70% { transform: translateX(-65%) translateY(10px) rotate(-18deg); }
-            100% { transform: translateX(-50%) translateY(0) rotate(0deg); }
-        }
-        .firing-anim { animation: autoRecoil 0.09s infinite; }
-        @keyframes autoRecoil {
-            0% { transform: translateX(-50%) translateY(0) rotate(0deg); }
-            50% { transform: translateX(-50%) translateY(9px) rotate(-2deg); }
-            100% { transform: translateX(-50%) translateY(0) rotate(0deg); }
-        }
-
-        #muzzle-flash {
-            position: absolute; bottom: 210px; left: 50%; transform: translateX(-50%);
-            width: 90px; height: 90px; border-radius: 50%; display: none;
-            background: radial-gradient(circle, rgba(255,220,120,1) 0%, rgba(255,120,0,0.85) 40%, transparent 72%);
-            z-index: 6; pointer-events: none;
-        }
+        /* O flash do cano agora é um grupo DENTRO do SVG da arma (ver #muzzle-flash),
+           assim ele se move e balança junto com a arma automaticamente. */
 
         /* CONTROLES MOBILE — estilo glass, monocromático (preto/branco) */
         #mobile-controls {
@@ -391,7 +380,7 @@
             </div>
         </div>
 
-        <button id="pause-btn" title="Pausar">⏸</button>
+        <button id="pause-btn" title="Pausar">||</button>
 
         <!-- HUD -->
         <div id="hud">
@@ -407,35 +396,124 @@
         <div id="reload-msg">RECARREGANDO...</div>
         <div id="pc-hint">WASD mover · Mouse/Espaço atira · R recarregar</div>
 
-        <!-- Efeitos e Arma (Desenhada via SVG - Kar98k estilizado) -->
-        <div id="muzzle-flash"></div>
-        <svg id="weapon-layer" viewBox="0 0 140 200">
-            <!-- Cano ventilado -->
-            <rect x="58" y="0" width="14" height="58" fill="#1c1c1c" />
-            <rect x="56" y="0" width="18" height="6" fill="#111" />
-            <rect x="60" y="10" width="10" height="3" fill="#000" opacity="0.6"/>
-            <rect x="60" y="18" width="10" height="3" fill="#000" opacity="0.6"/>
-            <rect x="60" y="26" width="10" height="3" fill="#000" opacity="0.6"/>
-            <!-- Mira -->
-            <rect x="62" y="2" width="6" height="6" fill="#000" />
-            <!-- Corpo/receptor -->
-            <rect x="48" y="55" width="38" height="24" fill="#2a2a2a" rx="2"/>
-            <!-- Tambor de munição (drum magazine) -->
-            <circle cx="66" cy="98" r="24" fill="#232323" />
-            <circle cx="66" cy="98" r="24" fill="none" stroke="#141414" stroke-width="3"/>
-            <circle cx="66" cy="98" r="9" fill="#3a3a3a" />
-            <!-- Guarda-mão de madeira -->
-            <rect x="44" y="52" width="16" height="22" fill="#6b4a2c" rx="2"/>
-            <!-- Coronha de madeira -->
-            <path d="M50 122 L88 122 L98 200 L38 200 Z" fill="#6b4a2c"/>
-            <path d="M50 122 L88 122 L94 165 L42 165 Z" fill="#7c5732"/>
-            <!-- Cabo de pistola (pistol grip) -->
-            <path d="M78 79 L96 79 L100 108 L82 108 Z" fill="#5c4530"/>
-            <!-- Gatilho / guarda-mato -->
-            <rect x="74" y="82" width="8" height="18" fill="#151515" />
-            <path d="M68 94 q10 16 18 0" stroke="#151515" stroke-width="5" fill="none"/>
-            <!-- Correia -->
-            <rect x="33" y="130" width="6" height="65" fill="#3f2c18" />
+        <!-- Arma em primeira pessoa: fuzil de ferrolho WWII (madeira avermelhada +
+             metal escuro), segurado por uma mão nua, na diagonal saindo do canto
+             inferior esquerdo em direção ao canto superior direito da tela — mesma
+             composição/perspectiva da foto de referência. -->
+        <svg id="weapon-layer" viewBox="0 0 520 440" preserveAspectRatio="xMinYMax meet">
+            <defs>
+                <linearGradient id="metalSheen" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stop-color="#3c3c38"/>
+                    <stop offset="45%" stop-color="#19191a"/>
+                    <stop offset="55%" stop-color="#141416"/>
+                    <stop offset="100%" stop-color="#050506"/>
+                </linearGradient>
+                <linearGradient id="woodSheen" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stop-color="#8a4a2a"/>
+                    <stop offset="50%" stop-color="#6b3419"/>
+                    <stop offset="100%" stop-color="#3f1d0d"/>
+                </linearGradient>
+                <linearGradient id="skinSheen" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stop-color="#d9a173"/>
+                    <stop offset="55%" stop-color="#c48957"/>
+                    <stop offset="100%" stop-color="#8f5f3b"/>
+                </linearGradient>
+                <linearGradient id="sleeveSheen" x1="0" y1="0" x2="1" y2="1">
+                    <stop offset="0%" stop-color="#6b7a4f"/>
+                    <stop offset="100%" stop-color="#3f4a2e"/>
+                </linearGradient>
+                <radialGradient id="flashCore" cx="50%" cy="50%" r="50%">
+                    <stop offset="0%" stop-color="#fffef0"/>
+                    <stop offset="35%" stop-color="#ffe066"/>
+                    <stop offset="70%" stop-color="#ff9d1f"/>
+                    <stop offset="100%" stop-color="#ff9d1f" stop-opacity="0"/>
+                </radialGradient>
+            </defs>
+
+            <!-- Todo o conjunto (mão + fuzil) fica num único grupo rotacionado, assim
+                 o balanço de caminhada, coice e recarga (controlados via JS) movem e
+                 giram a arma inteira de forma consistente. -->
+            <g id="gun-rig" transform="translate(6,372) rotate(-21)">
+
+                <!-- ======= MANGA DA FARDA - BRAÇO DE TRÁS (segura o gatilho) ======= -->
+                <rect x="-60" y="-70" width="150" height="215" rx="30" fill="url(#sleeveSheen)" stroke="#0a0a08" stroke-width="3"/>
+                <rect x="-60" y="-14" width="150" height="16" fill="#2c331f" opacity="0.6"/>
+
+                <!-- ======= CORONHA DE MADEIRA (encostada no ombro, atrás da mão de trás) ======= -->
+                <path d="M-10 -55 L70 -60 L96 -18 L100 40 L74 92 L-10 100 Z" fill="url(#woodSheen)" stroke="#0a0a08" stroke-width="3"/>
+                <path d="M6 -40 L64 -44 L82 -10 L84 30 L4 34 Z" fill="#b06a3d" opacity="0.35"/>
+
+                <!-- ======= CANO/GUARDA-MÃO DE MADEIRA (onde a mão da frente segura, por baixo do cano) ======= -->
+                <path d="M96 -18 L300 -60 L322 -34 L296 32 L100 40 Z" fill="url(#woodSheen)" stroke="#0a0a08" stroke-width="3"/>
+                <path d="M112 -8 L292 -44 L306 -28 L284 20 L108 26 Z" fill="#c47a45" opacity="0.4"/>
+
+                <!-- ======= FERROLHO (bolt handle) ======= -->
+                <path d="M120 -46 L150 -66 L162 -50 L134 -28 Z" fill="url(#metalSheen)" stroke="#0a0a08" stroke-width="3"/>
+                <circle cx="156" cy="-58" r="9" fill="#141416" stroke="#0a0a08" stroke-width="2"/>
+
+                <!-- ======= RECEPTOR METÁLICO ======= -->
+                <path d="M150 -50 L235 -70 L255 -46 L232 -12 L148 -8 Z" fill="url(#metalSheen)" stroke="#0a0a08" stroke-width="3"/>
+
+                <!-- ======= ALÇA DE MIRA TRASEIRA (rear sight) ======= -->
+                <path d="M244 -78 L268 -84 L272 -66 L250 -58 Z" fill="#0d0d0e" stroke="#0a0a08" stroke-width="2"/>
+                <rect x="253" y="-78" width="4" height="16" fill="#050506"/>
+
+                <!-- ======= GUARDA-MATO E GATILHO (entre a coronha e o receptor) ======= -->
+                <path d="M112 6 Q99 34 116 58 Q136 75 159 62 Q173 39 162 13 Q140 -5 112 6 Z"
+                      fill="none" stroke="url(#metalSheen)" stroke-width="8" stroke-linejoin="round"/>
+                <rect x="129" y="9" width="10" height="30" rx="4" fill="#0d0d0e" stroke="#050506" stroke-width="1.5" transform="rotate(11 134 24)"/>
+
+                <!-- ======= CANO METÁLICO (bare barrel, mais fino, se estendendo) ======= -->
+                <path d="M310 -52 L410 -82 L420 -72 L330 -30 Z" fill="url(#metalSheen)" stroke="#0a0a08" stroke-width="3"/>
+
+                <!-- ======= MASSA DE MIRA FRONTAL (front sight hood) ======= -->
+                <path d="M394 -92 L424 -98 L432 -84 L406 -76 Z" fill="#0d0d0e" stroke="#0a0a08" stroke-width="2"/>
+                <rect x="410" y="-104" width="5" height="18" fill="#050506" transform="rotate(-12 410 -104)"/>
+                <circle cx="412" cy="-96" r="9" fill="none" stroke="#050506" stroke-width="3"/>
+
+                <!-- ======= PONTA DO CANO / BOCA ======= -->
+                <path d="M410 -78 L444 -86 L452 -78 L418 -70 Z" fill="#0a0a0b" stroke="#050506" stroke-width="2"/>
+
+                <!-- ======= MANGA DA FARDA - PUNHO DO BRAÇO DA FRENTE (curta, o braço se estende para fora de quadro) ======= -->
+                <g transform="rotate(-6 210 14)">
+                    <rect x="158" y="-16" width="80" height="64" rx="20" fill="url(#sleeveSheen)" stroke="#0a0a08" stroke-width="3"/>
+                    <rect x="158" y="34" width="80" height="10" fill="#2c331f" opacity="0.6"/>
+                </g>
+
+                <!-- ======= MÃO DA FRENTE (segura por baixo do guarda-mão / cano, como na referência) ======= -->
+                <path d="M200 -4 Q186 32 208 66 Q255 84 304 62 Q322 30 312 -8 Q262 -34 200 -4 Z"
+                      fill="url(#skinSheen)" stroke="#0a0a08" stroke-width="3"/>
+                <!-- dedos curvados por cima do cano -->
+                <path d="M222 -14 Q230 -38 256 -42 L264 -14 Q244 -6 226 -2 Z" fill="#c48957" stroke="#0a0a08" stroke-width="2"/>
+                <path d="M258 -22 Q266 -44 292 -48 L300 -18 Q276 -12 260 -6 Z" fill="#c48957" stroke="#0a0a08" stroke-width="2"/>
+                <path d="M294 -28 Q302 -46 326 -50 L334 -20 Q310 -14 296 -8 Z" fill="#c48957" stroke="#0a0a08" stroke-width="2"/>
+                <!-- linhas de nó dos dedos -->
+                <path d="M230 -12 L258 -18 M266 -18 L294 -26 M302 -24 L328 -32" stroke="#8f5f3b" stroke-width="2" opacity="0.55" fill="none"/>
+                <!-- polegar por baixo -->
+                <path d="M206 28 Q192 46 204 66 L228 62 Q222 36 218 18 Z" fill="#d9a173" stroke="#0a0a08" stroke-width="2"/>
+
+                <!-- ======= MÃO DE TRÁS (segura o punho da coronha, dedo indicador no gatilho) ======= -->
+                <path d="M42 18 Q30 54 54 84 Q92 100 128 82 Q146 54 138 22 Q96 -4 42 18 Z"
+                      fill="url(#skinSheen)" stroke="#0a0a08" stroke-width="3"/>
+                <!-- dedos envolvendo o punho da coronha -->
+                <path d="M56 6 Q62 -16 84 -20 L94 4 Q76 10 60 14 Z" fill="#c48957" stroke="#0a0a08" stroke-width="2"/>
+                <path d="M88 -2 Q96 -22 118 -26 L128 -2 Q108 4 92 8 Z" fill="#c48957" stroke="#0a0a08" stroke-width="2"/>
+                <!-- indicador esticado dentro da guarda-mato, no gatilho -->
+                <path d="M118 8 Q133 -6 151 -2 Q161 15 150 31 Q134 27 120 22 Z" fill="#c48957" stroke="#0a0a08" stroke-width="2"/>
+                <!-- linhas de nó dos dedos -->
+                <path d="M64 8 L90 2 M98 0 L122 -6" stroke="#8f5f3b" stroke-width="2" opacity="0.55" fill="none"/>
+                <!-- polegar envolvendo o outro lado do punho -->
+                <path d="M46 46 Q32 62 44 82 L68 76 Q60 52 56 36 Z" fill="#d9a173" stroke="#0a0a08" stroke-width="2"/>
+
+                <!-- ======= FLASH DO CANO (na boca, some/aparece via JS) ======= -->
+                <g id="muzzle-flash" style="display:none;">
+                    <circle cx="452" cy="-90" r="42" fill="url(#flashCore)"/>
+                    <polygon points="452,-136 462,-104 494,-114 470,-92 502,-74 466,-80 474,-46 452,-72 430,-46 438,-80 402,-74 434,-92 410,-114 442,-104"
+                             fill="#ffe066" opacity="0.95"/>
+                    <polygon points="452,-122 459,-102 480,-108 464,-94 484,-84 461,-88 466,-64 452,-82 438,-64 443,-88 420,-84 440,-94 424,-108 445,-102"
+                             fill="#fff8dd"/>
+                </g>
+            </g>
         </svg>
 
         <!-- Controles -->
@@ -1294,18 +1372,45 @@
     const muzzleFlash = document.getElementById('muzzle-flash');
     const damageFlash = document.getElementById('damage-flash');
     const bloodScreen = document.getElementById('blood-screen');
+    const RELOAD_DURATION = 2.0;
+
+    // Estado da animação da arma (100% controlado via JS a cada frame em update(),
+    // combinando: balanço ao caminhar (bob), coice de tiro (kick), giro de recarga
+    // e a transição suave ao mirar (aimBlend: 0 = quadril, 1 = mirando))
+    let weaponBobPhase = 0;
+    let weaponKick = 0;
+    let weaponTremor = 0;
+    let aimBlend = 0;
+
+    // Métricas de layout da arma, recalculadas a cada resize (nunca a cada frame,
+    // pra não forçar reflow constante). Usadas pra centralizar a arma na tela
+    // durante a mira de forma proporcional a QUALQUER proporção de tela — antes o
+    // deslocamento da mira era um valor fixo em pixels, então em telas muito largas
+    // (celular deitado) a arma não chegava a entrar totalmente na tela e ficava
+    // cortada na lateral esquerda.
+    let weaponAimShiftX = 0;
+    let weaponAimShiftY = 0;
+    function updateWeaponLayoutMetrics() {
+        let vw = window.innerWidth, vh = window.innerHeight;
+        // Espelha EXATAMENTE a fórmula do CSS "width: clamp(250px, 82vmin, 460px)"
+        // em vez de medir o elemento (SVG raiz não tem offsetWidth confiável em
+        // todos os navegadores, e medir depois do transform aplicado dá valor errado).
+        let vmin = Math.min(vw, vh);
+        let layerW = Math.max(250, Math.min(0.82 * vmin, 460));
+        let layerLeftPx = vw * -0.04; // espelha o "left: -4%" do CSS
+        // desloca o suficiente pra centralizar o CENTRO da arma no centro da tela
+        weaponAimShiftX = (vw / 2) - (layerLeftPx + layerW / 2);
+        weaponAimShiftY = -vh * 0.17;
+    }
+    window.addEventListener('resize', updateWeaponLayoutMetrics);
 
     function startReload() {
         if (player.reloading || player.ammo === player.maxAmmo || gameState !== 'PLAYING') return;
         player.reloading = true;
         player.firing = false;
-        weaponLayer.classList.remove('firing-anim');
         muzzleFlash.style.display = 'none';
-        player.reloadTimer = 2.0;
+        player.reloadTimer = RELOAD_DURATION;
         document.getElementById('reload-msg').style.display = 'block';
-        weaponLayer.classList.remove('reload-anim');
-        void weaponLayer.offsetWidth;
-        weaponLayer.classList.add('reload-anim');
     }
 
     // Dispara uma única bala da rajada (chamado continuamente enquanto o gatilho é segurado)
@@ -1316,6 +1421,9 @@
         document.getElementById('ammo-val').innerText = player.ammo;
 
         muzzleFlash.style.display = 'block';
+        weaponKick = 1;
+        weaponTremor = 1;
+        player.shakeTimer = Math.max(player.shakeTimer, 0.09);
         playShot(true);
 
         enemies.forEach((enemy) => {
@@ -1350,6 +1458,73 @@
         });
 
         if (player.ammo === 0) startReload();
+    }
+
+    // Anima a arma a cada frame: balanço ao andar (walk bob), coice ao atirar (kick),
+    // giro/queda ao recarregar (reload tilt) e a transição ao MIRAR (a arma sobe,
+    // centraliza e nivela na tela, parecida com a pose de mira da referência)
+    // — tudo combinado num único transform.
+    function updateWeaponTransform(dt, fwd, str) {
+        let speedFrac = Math.min(1, Math.hypot(fwd, str));
+        let moving = speedFrac > 0.05 && !player.reloading && gameState === 'PLAYING';
+
+        // Transição suave entre quadril (0) e mirando (1)
+        let aimTarget = (player.isAiming && !player.reloading && gameState === 'PLAYING') ? 1 : 0;
+        aimBlend += (aimTarget - aimBlend) * Math.min(1, dt * 9);
+        if (Math.abs(aimTarget - aimBlend) < 0.001) aimBlend = aimTarget;
+
+        // Fase do balanço: acelera ao caminhar/correr, e ainda oscila bem devagar
+        // parado em pé (leve "respiração" da arma, como em jogos old-school)
+        let bobRate = moving ? (player.isAiming ? 7.5 : 10.5) * (0.55 + 0.45 * speedFrac) : 1.1;
+        weaponBobPhase += dt * bobRate;
+
+        let bobAmpMul = 1 - aimBlend * 0.75; // mirando, o balanço quase desaparece
+        let bobAmpX = (moving ? 7 : 1.2) * bobAmpMul;
+        let bobAmpY = (moving ? 7.5 : 0.8) * bobAmpMul;
+        let bobX = Math.sin(weaponBobPhase) * bobAmpX;
+        let bobY = Math.abs(Math.sin(weaponBobPhase * (moving ? 2 : 1))) * bobAmpY;
+
+        // Coice de disparo: sobe rápido e relaxa suavemente (decaimento exponencial)
+        weaponKick = Math.max(0, weaponKick - dt * 7.5);
+        let kickY = weaponKick * 16;
+        let kickRot = -weaponKick * 3.2;
+
+        // Tremida ao atirar: uma vibração rápida e nervosa que se soma ao coice
+        // e desaparece bem mais rápido que ele (decaimento mais agressivo)
+        weaponTremor = Math.max(0, weaponTremor - dt * 11);
+        let tremorMag = weaponTremor * weaponTremor * 9;
+        let tremorX = (Math.random() * 2 - 1) * tremorMag;
+        let tremorY = (Math.random() * 2 - 1) * tremorMag * 0.6;
+        let tremorRot = (Math.random() * 2 - 1) * weaponTremor * 1.6;
+
+        // Giro de recarga: a arma baixa e gira pra fora, e volta ao centro
+        let reloadX = 0, reloadY = 0, reloadRot = 0;
+        if (player.reloading) {
+            let p = 1 - Math.max(0, player.reloadTimer) / RELOAD_DURATION; // 0 -> 1
+            let curve = Math.sin(Math.min(1, p) * Math.PI); // sobe e desce suavemente
+            reloadX = -curve * 55;
+            reloadY = curve * 60;
+            reloadRot = -curve * 26;
+            // durante a recarga o balanço de passo praticamente some
+            bobX *= 0.15; bobY *= 0.15;
+        }
+
+        // Pose de mira: a arma sobe, desliza até o CENTRO real da tela (calculado
+        // dinamicamente em updateWeaponLayoutMetrics, então nunca fica cortada na
+        // lateral, em qualquer proporção de tela), nivela quase na horizontal (parece
+        // "olhar pela mira" de frente, simétrico, estilo referência) e aproxima (zoom)
+        let ease = aimBlend * aimBlend * (3 - 2 * aimBlend); // smoothstep
+        let aimX = ease * weaponAimShiftX;
+        let aimY = ease * weaponAimShiftY;
+        let aimRot = ease * 19.5; // quase cancela a inclinação -21 de quadril: fica nivelada
+        let aimScale = 1 + ease * 0.22;
+
+        let totalX = bobX + reloadX + aimX + tremorX;
+        let totalY = bobY + kickY + reloadY + aimY + tremorY;
+        let totalRot = kickRot + reloadRot + aimRot + tremorRot;
+
+        weaponLayer.style.transform =
+            `translate(${totalX.toFixed(2)}px, ${totalY.toFixed(2)}px) rotate(${totalRot.toFixed(2)}deg) scale(${aimScale.toFixed(3)})`;
     }
 
     document.getElementById('shoot-btn').addEventListener('touchstart', (e) => {
@@ -1480,6 +1655,7 @@
         let str = player.moveStr + kb.str;
         fwd = Math.max(-1, Math.min(1, fwd));
         str = Math.max(-1, Math.min(1, str));
+        updateWeaponTransform(dt, fwd, str);
 
         let moveSpeed = (player.isAiming ? 2.2 : 3.5) * dt;
         let cos = Math.cos(player.dir);
@@ -1945,13 +2121,15 @@
         document.getElementById('hud').style.display = 'flex';
         pauseBtn.style.display = 'flex';
         weaponLayer.style.display = 'block';
+        updateWeaponLayoutMetrics();
         document.getElementById('pc-hint').style.display = isTouchDevice ? 'none' : 'block';
         document.getElementById('mobile-controls').style.display = isTouchDevice ? 'block' : 'none';
 
         player.x = PLAYER_START_X; player.y = PLAYER_START_Y; player.hp = 100; player.dir = 0;
         player.ammo = player.maxAmmo; player.reloading = false; player.shootCd = 0; player.shakeTimer = 0;
         player.firing = false; player.lastDamageTime = performance.now();
-        weaponLayer.classList.remove('firing-anim', 'recoil-anim', 'reload-anim');
+        weaponBobPhase = 0; weaponKick = 0; weaponTremor = 0; aimBlend = 0;
+        weaponLayer.style.transform = 'translate(0,0) rotate(0deg) scale(1)';
         bloodScreen.style.opacity = 0;
         document.getElementById('ammo-val').innerText = player.ammo;
         document.getElementById('ammo-max').innerText = player.maxAmmo;
