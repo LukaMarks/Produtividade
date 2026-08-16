@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Frente de Batalha: 1944</title>
     <style>
         /* RESET E TELA CHEIA GARANTIDA */
@@ -100,16 +100,46 @@
         .mode-btn.active { background-color: #4b5320; color: #f5deb3; border-color: #e8c96a; opacity: 1; }
         .mode-btn:active { transform: scale(0.95); }
 
-        /* HUD */
-        #hud {
-            position: absolute; top: 15px; left: 0; width: 100%;
-            display: flex; justify-content: space-between; padding: 0 20px;
-            font-size: 1.05rem; font-weight: bold; color: #fff;
-            text-shadow: 2px 2px #000; z-index: 10; pointer-events: none; display: none;
+        /* BOTÃO DE PAUSA (gameplay) — z-index acima de TUDO (inclusive dos controles touch em
+           tela cheia) para que o toque nunca seja "roubado" pela área de mira. Isso corrige o
+           bug em que o menu de pausa não abria no mobile. */
+        #pause-btn {
+            position: absolute; top: calc(14px + env(safe-area-inset-top, 0px)); right: calc(14px + env(safe-area-inset-right, 0px));
+            z-index: 50;
+            width: 42px; height: 42px; display: none; align-items: center; justify-content: center;
+            background: rgba(255,255,255,0.10); backdrop-filter: blur(14px) saturate(140%);
+            -webkit-backdrop-filter: blur(14px) saturate(140%);
+            border: 1px solid rgba(255,255,255,0.28); border-radius: 50%;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.25);
+            color: #fff; font-size: 1.05rem; cursor: pointer; padding: 0;
         }
-        #hud .hud-block { background: rgba(20,22,14,0.55); border: 2px solid rgba(212,197,169,0.35); padding: 6px 12px; }
-        #hp-bar-wrap { width: 120px; height: 10px; background: rgba(0,0,0,0.6); border: 1px solid #000; margin-top: 4px; }
-        #hp-bar { height: 100%; background: linear-gradient(90deg,#6b1010,#c0392b); width: 100%; }
+        #pause-btn:active { transform: scale(0.92); background: rgba(255,255,255,0.18); }
+
+        /* TELA DE PAUSA */
+        #pause-screen h1 { font-size: 1.8rem; }
+        .btn-row { display: flex; flex-direction: column; gap: 12px; align-items: center; }
+        .btn-ww2.btn-secondary { background-color: #33361f; font-size: 1.05rem; padding: 12px 30px; }
+        .btn-ww2.btn-secondary:active { background-color: #262813; }
+
+        /* HUD — estilo "glass" moderno, monocromático (preto/branco), adaptado a qualquer tela
+           via clamp()/vw e respeitando áreas seguras (notch/ilha dinâmica). */
+        #hud {
+            position: absolute; top: calc(12px + env(safe-area-inset-top, 0px)); left: 0; width: 100%;
+            display: flex; justify-content: space-between; align-items: flex-start;
+            padding: 0 calc(14px + env(safe-area-inset-left, 0px)) 0 calc(14px + env(safe-area-inset-left, 0px));
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            font-size: clamp(0.72rem, 2.6vw, 0.95rem); font-weight: 600; color: #fff;
+            letter-spacing: 0.3px; text-shadow: none;
+            z-index: 10; pointer-events: none; display: none; gap: 10px;
+        }
+        #hud .hud-block {
+            background: rgba(255,255,255,0.08); backdrop-filter: blur(14px) saturate(140%);
+            -webkit-backdrop-filter: blur(14px) saturate(140%);
+            border: 1px solid rgba(255,255,255,0.20); border-radius: 14px;
+            padding: 8px 14px; box-shadow: 0 4px 14px rgba(0,0,0,0.28), inset 0 1px 0 rgba(255,255,255,0.18);
+        }
+        #hp-bar-wrap { width: clamp(80px,26vw,130px); height: 6px; background: rgba(255,255,255,0.15); border-radius: 4px; margin-top: 5px; overflow: hidden; }
+        #hp-bar { height: 100%; background: #fff; width: 100%; border-radius: 4px; transition: width 0.2s ease-out; }
         #reload-msg {
             position: absolute; bottom: 30%; left: 50%; transform: translateX(-50%);
             color: #e8c96a; font-weight: bold; font-size: 1rem; text-shadow: 2px 2px #000;
@@ -152,7 +182,7 @@
             z-index: 6; pointer-events: none;
         }
 
-        /* CONTROLES MOBILE */
+        /* CONTROLES MOBILE — estilo glass, monocromático (preto/branco) */
         #mobile-controls {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             z-index: 20; display: none; pointer-events: none;
@@ -162,30 +192,64 @@
             z-index: 1; pointer-events: auto;
         }
         #joystick-base {
-            position: absolute; bottom: 40px; left: 20px; width: 120px; height: 120px;
-            background: rgba(255, 255, 255, 0.15); border: 2px solid rgba(255, 255, 255, 0.4);
-            border-radius: 50%; z-index: 2; pointer-events: auto;
+            position: absolute; bottom: calc(34px + env(safe-area-inset-bottom, 0px)); left: calc(20px + env(safe-area-inset-left, 0px));
+            width: 118px; height: 118px;
+            background: rgba(255, 255, 255, 0.08); backdrop-filter: blur(10px) saturate(140%);
+            -webkit-backdrop-filter: blur(10px) saturate(140%);
+            border: 1px solid rgba(255, 255, 255, 0.28); border-radius: 50%;
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.2), 0 4px 14px rgba(0,0,0,0.3);
+            z-index: 2; pointer-events: auto;
         }
         #joystick-stick {
-            position: absolute; top: 35px; left: 35px; width: 50px; height: 50px;
-            background: rgba(212, 197, 169, 0.7); border-radius: 50%; pointer-events: none;
+            position: absolute; top: 34px; left: 34px; width: 50px; height: 50px;
+            background: rgba(255,255,255,0.75); backdrop-filter: blur(4px);
+            border: 1px solid rgba(255,255,255,0.6); border-radius: 50%; pointer-events: none;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.35);
         }
         .action-area {
-            position: absolute; bottom: 40px; right: 20px;
-            display: flex; gap: 10px; align-items: flex-end; z-index: 2; pointer-events: auto;
+            position: absolute; bottom: calc(34px + env(safe-area-inset-bottom, 0px)); right: calc(20px + env(safe-area-inset-right, 0px));
+            display: flex; gap: 12px; align-items: flex-end; z-index: 2; pointer-events: auto;
         }
         .ctrl-btn {
-            border-radius: 50%; color: #d4c5a9; font-weight: bold; font-family: inherit;
-            display: flex; justify-content: center; align-items: center;
-            border: 3px solid rgba(212, 197, 169, 0.5); text-shadow: 1px 1px #000;
+            border-radius: 50%; color: #fff; font-weight: 600; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            display: flex; justify-content: center; align-items: center; flex-direction: column; gap: 2px;
+            background: rgba(255,255,255,0.08); backdrop-filter: blur(12px) saturate(140%);
+            -webkit-backdrop-filter: blur(12px) saturate(140%);
+            border: 1px solid rgba(255,255,255,0.28);
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.2), 0 4px 14px rgba(0,0,0,0.3);
+            text-shadow: none;
         }
-        #aim-btn { width: 60px; height: 60px; background: rgba(75, 83, 32, 0.8); font-size: 0.75rem; }
-        #shoot-btn { width: 80px; height: 80px; background: rgba(180, 40, 40, 0.9); font-size: 0.95rem; }
+        .ctrl-btn svg { pointer-events: none; }
+        #aim-btn { width: 58px; height: 58px; font-size: 0.62rem; }
+        #aim-btn.active { background: rgba(255,255,255,0.32); border-color: rgba(255,255,255,0.7); }
+        #shoot-btn { width: 82px; height: 82px; font-size: 0.7rem; }
+        #shoot-btn:active { background: rgba(255,255,255,0.28); }
         #reload-btn {
-            width: 56px; height: 56px; background: rgba(60, 60, 60, 0.85); font-size: 0.62rem;
+            width: 52px; height: 52px; font-size: 0.55rem;
             align-self: center; line-height: 0.95;
         }
         #reload-btn:active, .ctrl-btn:active { transform: scale(0.92); }
+
+        /* CONTROLES "TOPO DA TELA" (estilo PUBG Mobile / pro-player claw) — mira grande à
+           esquerda, tiro grande à direita, ambos no topo. Quase invisíveis para não atrapalhar
+           a visão do jogo: só um contorno sutil "glass" e um ícone pequeno no canto. */
+        .top-zone {
+            position: absolute; top: 0; width: 42%; height: 34%;
+            z-index: 2; pointer-events: auto;
+            background: rgba(255,255,255,0.025);
+            border: 1px solid rgba(255,255,255,0.10);
+        }
+        #aim-zone-top { left: 0; border-radius: 0 0 22px 0; }
+        #shoot-zone-top { right: 0; border-radius: 0 0 0 22px; }
+        .top-zone.active { background: rgba(255,255,255,0.07); border-color: rgba(255,255,255,0.22); }
+        .top-zone .zone-label {
+            position: absolute; top: 10px; display: flex; align-items: center; gap: 5px;
+            color: rgba(255,255,255,0.55); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            font-size: 0.6rem; font-weight: 600; letter-spacing: 1px; pointer-events: none;
+        }
+        #aim-zone-top .zone-label { left: 12px; }
+        #shoot-zone-top .zone-label { right: 12px; flex-direction: row-reverse; }
+        .top-zone svg { opacity: 0.65; }
 
         /* DICA DESKTOP */
         #pc-hint {
@@ -274,11 +338,11 @@
                 </div>
                 <h1>FRENTE DE BATALHA<br>1944</h1>
               <h2>by @lukamarks</h2>
-                <p> Soldados do eixo tomaram a cidade francesa de Saint-Lô. Elimine quantos puder e sobreviva. Empunhe sua Thompson e senta a púa!.</p>
-              <p>v1</p>
-                <div class="small-note">PC: WASD + Mouse (clique para travar a mira) | Mobile: Joystick e botões — segure FOGO para rajada, toque RECARREGAR quando o pente esvaziar</div>
+                <p> Soldados do eixo tomaram a cidade francesa de Saint-Lô. Elimine quantos puder e sobreviva. Empunhe sua Thompson e senta a púa, neguin!.</p>
+              <p>v1,2</p>
+                <div class="small-note">PC: WASD + Mouse | Mobile: Joystick e botões — segure FOGO para rajada, toque RECARREGAR quando o pente esvaziar</div>
                 <div class="mode-row">
-                    <label>MODO DE JOGO</label>
+                    <label>CLIMA</label>
                     <div class="mode-btns">
                         <button type="button" class="mode-btn active" id="mode-day-btn">☀ DIA</button>
                         <button type="button" class="mode-btn" id="mode-night-btn">☾ NOITE</button>
@@ -297,13 +361,37 @@
                 <polygon points="12,1 15,9 23,9 16.5,14 19,22 12,17 5,22 7.5,14 1,9 9,9" fill="#8a1414" stroke="#3a0505" stroke-width="0.8"/>
                 <line x1="7" y1="6" x2="17" y2="18" stroke="#14150f" stroke-width="0.8"/>
             </svg>
-            <h1 style="color: #e74c3c;">VOCÊ CAIU!</h1>
+            <h1 style="color: #e74c3c;">SE FUDEU!</h1>
             <div class="stats-row">
                 <div>SOBREVIVEU: <span id="final-time">0</span>s</div>
                 <div>ABATES: <span id="final-kills">0</span></div>
             </div>
-            <button class="btn-ww2" id="restart-btn">TENTAR NOVAMENTE</button>
+            <div class="btn-row">
+                <button class="btn-ww2" id="restart-btn">TENTAR NOVAMENTE</button>
+                <button class="btn-ww2 btn-secondary" id="gameover-menu-btn">VOLTAR AO MENU</button>
+            </div>
         </div>
+
+        <div id="pause-screen" class="overlay" style="display: none;">
+            <h1>PAUSADO</h1>
+            <div class="sens-row">
+                <label>SENSIBILIDADE DA CÂMERA/MIRA: <span id="pause-sens-value">5</span></label>
+                <input type="range" id="pause-sens-slider" min="1" max="10" step="1" value="5">
+            </div>
+            <div class="mode-row" id="control-mode-row">
+                <label>CONTROLES DE MIRA/TIRO (MOBILE)</label>
+                <div class="mode-btns">
+                    <button type="button" class="mode-btn active" id="controls-standard-btn">PADRÃO</button>
+                    <button type="button" class="mode-btn" id="controls-top-btn">4 DEDOS</button>
+                </div>
+            </div>
+            <div class="btn-row">
+                <button class="btn-ww2" id="resume-btn">CONTINUAR</button>
+                <button class="btn-ww2 btn-secondary" id="pause-menu-btn">VOLTAR AO MENU</button>
+            </div>
+        </div>
+
+        <button id="pause-btn" title="Pausar">⏸</button>
 
         <!-- HUD -->
         <div id="hud">
@@ -316,8 +404,8 @@
                 ABATES: <span id="kills-val">0</span> &nbsp;|&nbsp; MUNIÇÃO: <span id="ammo-val">30</span>/<span id="ammo-max">30</span>
             </div>
         </div>
-        <div id="reload-msg">TROCANDO PENTE...</div>
-        <div id="pc-hint">WASD mover · Mouse mirar · Segure Clique/Espaço para rajada · R recarregar</div>
+        <div id="reload-msg">RECARREGANDO...</div>
+        <div id="pc-hint">WASD mover · Mouse/Espaço atira · R recarregar</div>
 
         <!-- Efeitos e Arma (Desenhada via SVG - Kar98k estilizado) -->
         <div id="muzzle-flash"></div>
@@ -355,9 +443,29 @@
             <div id="camera-zone"></div>
             <div id="joystick-base"><div id="joystick-stick"></div></div>
             <div class="action-area">
-                <div class="ctrl-btn" id="reload-btn">RECARREGAR</div>
-                <div class="ctrl-btn" id="aim-btn">MIRAR</div>
-                <div class="ctrl-btn" id="shoot-btn">FOGO</div>
+                <div class="ctrl-btn" id="reload-btn">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 3v6h-6"/></svg>
+                </div>
+                <div class="ctrl-btn" id="aim-btn">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.6"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="2.4" fill="#fff"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4" stroke-linecap="round"/></svg>
+                </div>
+                <div class="ctrl-btn" id="shoot-btn">
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.6"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.4" fill="#fff"/></svg>
+                </div>
+            </div>
+
+            <!-- Controles alternativos "topo da tela" (estilo PUBG Mobile pro-player) -->
+            <div class="top-zone" id="aim-zone-top" style="display:none;">
+                <div class="zone-label">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="2" fill="currentColor"/></svg>
+                    MIRA
+                </div>
+            </div>
+            <div class="top-zone" id="shoot-zone-top" style="display:none;">
+                <div class="zone-label">
+                    FOGO
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="4"/></svg>
+                </div>
             </div>
         </div>
 
@@ -389,7 +497,7 @@
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
 
-    // Ajusta a resolução interna do canvas para não distorcer no celular
+    // Ajusta a resolução interna do canvas para não distorcer, seja qual for a proporção da tela
     function resizeCanvas() {
         let w = window.innerWidth;
         let h = window.innerHeight;
@@ -937,10 +1045,18 @@
     let sensMultiplier = 1;
     const sensSlider = document.getElementById('sens-slider');
     const sensValueLabel = document.getElementById('sens-value');
-    sensSlider.addEventListener('input', () => {
-        sensMultiplier = Number(sensSlider.value) / 5;
-        sensValueLabel.innerText = sensSlider.value;
-    });
+    const pauseSensSlider = document.getElementById('pause-sens-slider');
+    const pauseSensValueLabel = document.getElementById('pause-sens-value');
+
+    function setSensitivity(value) {
+        sensMultiplier = Number(value) / 5;
+        sensSlider.value = value;
+        sensValueLabel.innerText = value;
+        pauseSensSlider.value = value;
+        pauseSensValueLabel.innerText = value;
+    }
+    sensSlider.addEventListener('input', () => setSensitivity(sensSlider.value));
+    pauseSensSlider.addEventListener('input', () => setSensitivity(pauseSensSlider.value));
 
     // Modo de jogo: dia (mapa padrão) ou noite (mesma cidade, com postes de luz amarelada)
     let gameMode = 'day';
@@ -1250,7 +1366,66 @@
         e.preventDefault();
         player.isAiming = !player.isAiming;
         player.fov = player.isAiming ? (Math.PI / 3) * 0.6 : (Math.PI / 3);
-        aimBtn.style.background = player.isAiming ? 'rgba(200, 150, 40, 0.9)' : 'rgba(75, 83, 32, 0.8)';
+        aimBtn.classList.toggle('active', player.isAiming);
+    });
+
+    // ============================================================
+    //  CONTROLES "TOPO DA TELA" — estilo PUBG Mobile (mira e tiro através de
+    //  duas áreas grandes no topo da tela, como pro players usam para não
+    //  tirar o polegar do movimento). Alternável no menu de pausa.
+    // ============================================================
+    let controlMode = 'standard'; // 'standard' | 'top'
+    const shootBtn = document.getElementById('shoot-btn');
+    const aimZoneTop = document.getElementById('aim-zone-top');
+    const shootZoneTop = document.getElementById('shoot-zone-top');
+    const controlsStandardBtn = document.getElementById('controls-standard-btn');
+    const controlsTopBtn = document.getElementById('controls-top-btn');
+
+    function applyControlMode() {
+        let topMode = controlMode === 'top';
+        aimBtn.style.display = topMode ? 'none' : 'flex';
+        shootBtn.style.display = topMode ? 'none' : 'flex';
+        aimZoneTop.style.display = topMode ? 'block' : 'none';
+        shootZoneTop.style.display = topMode ? 'block' : 'none';
+    }
+    function setControlMode(mode) {
+        controlMode = mode;
+        controlsStandardBtn.classList.toggle('active', mode === 'standard');
+        controlsTopBtn.classList.toggle('active', mode === 'top');
+        // sair de qualquer estado de mira/tiro pendente ao trocar de modo
+        player.isAiming = false; player.fov = Math.PI / 3;
+        player.firing = false;
+        aimZoneTop.classList.remove('active');
+        shootZoneTop.classList.remove('active');
+        applyControlMode();
+    }
+    controlsStandardBtn.addEventListener('click', () => setControlMode('standard'));
+    controlsTopBtn.addEventListener('click', () => setControlMode('top'));
+    // o seletor de modo de controle só faz sentido em dispositivos touch
+    if (!isTouchDevice) document.getElementById('control-mode-row').style.display = 'none';
+    applyControlMode();
+
+    aimZoneTop.addEventListener('touchstart', (e) => {
+        e.preventDefault();
+        player.isAiming = true;
+        player.fov = (Math.PI / 3) * 0.6;
+        aimZoneTop.classList.add('active');
+    });
+    aimZoneTop.addEventListener('touchend', (e) => {
+        e.preventDefault();
+        player.isAiming = false;
+        player.fov = Math.PI / 3;
+        aimZoneTop.classList.remove('active');
+    });
+    shootZoneTop.addEventListener('touchstart', (e) => {
+        e.preventDefault(); ensureAudio();
+        player.firing = true;
+        shootZoneTop.classList.add('active');
+    });
+    shootZoneTop.addEventListener('touchend', (e) => {
+        e.preventDefault();
+        player.firing = false;
+        shootZoneTop.classList.remove('active');
     });
 
     // ============================================================
@@ -1452,6 +1627,11 @@
         ctx.lineTo(towerX + 8, canvas.height/2 - canvas.height*0.14);
         ctx.closePath(); ctx.fill();
 
+        // Distância do plano de projeção (em pixels), derivada do FOV horizontal.
+        // Usar essa mesma referência tanto para o chão quanto para paredes/sprites é o que
+        // mantém a perspectiva correta e sem distorção em QUALQUER proporção de tela.
+        const projPlaneDist = (canvas.width / 2) / Math.tan(player.fov / 2);
+
         // Chão texturizado (rua de paralelepípedos de uma cidade francesa) via floor-casting
         {
             let fw = canvas.width, fh = canvas.height;
@@ -1460,7 +1640,7 @@
             if (rowsH > 0 && fw > 0) {
                 let floorImg = floorCtx.getImageData(0, halfH, fw, rowsH);
                 let data = floorImg.data;
-                let posZ = 0.5 * fh;
+                let posZ = 0.5 * projPlaneDist;
                 let rayAngleL = player.dir - player.fov / 2;
                 let rayAngleR = player.dir + player.fov / 2;
                 let dirX0 = Math.cos(rayAngleL), dirY0 = Math.sin(rayAngleL);
@@ -1530,7 +1710,7 @@
             let perpDist = side === 0 ? sideDistX - dDistX : sideDistY - dDistY;
             zBuffer[x] = perpDist;
 
-            let h = Math.floor(canvas.height / perpDist);
+            let h = Math.floor(projPlaneDist / perpDist);
             let start = Math.max(0, -h / 2 + canvas.height / 2);
             let end = Math.min(canvas.height, h / 2 + canvas.height / 2);
 
@@ -1571,11 +1751,15 @@
                 if (Math.abs(angle) > player.fov * 0.85) return;
 
                 let screenX = (canvas.width / 2) * (1 + angle / (player.fov / 2));
-                let sSize = Math.min(canvas.height * 1.6, Math.abs(canvas.height / dist));
+                let sSize = Math.min(canvas.height * 1.6, Math.abs(projPlaneDist / dist));
                 let spriteAspect = LAMP_W / LAMP_H;
                 let spriteW = sSize * spriteAspect * 0.55;
                 let spriteH = sSize * 0.98;
-                let drawY = canvas.height - spriteH - canvas.height * 0.015;
+                // Ancorado no mesmo horizonte de projeção usado pelas paredes (canvas.height/2),
+                // e não numa linha fixa perto do rodapé da tela — assim a base do poste acompanha
+                // corretamente a perspectiva do chão em vez de "flutuar" ou "brotar" perto do jogador.
+                let drawY = (canvas.height - spriteH) / 2 + sSize * 0.06;
+                let baseY = drawY + spriteH; // ponto onde o poste toca o chão nesta distância
 
                 if (dist > 0.2 && screenX > -spriteW && screenX < canvas.width + spriteW) {
                     let left = screenX - spriteW / 2;
@@ -1591,12 +1775,12 @@
                     glow.addColorStop(1, 'rgba(255,160,60,0)');
                     ctx.fillStyle = glow;
                     ctx.beginPath(); ctx.arc(screenX, drawY + spriteH * 0.14, glowR, 0, Math.PI * 2); ctx.fill();
-                    // poça de luz amarelada no chão sob o poste
-                    let poolGrad = ctx.createRadialGradient(screenX, canvas.height * 0.86, 0, screenX, canvas.height * 0.86, glowR * 0.85);
+                    // poça de luz amarelada no chão sob o poste, ancorada na base real do sprite
+                    let poolGrad = ctx.createRadialGradient(screenX, baseY, 0, screenX, baseY, glowR * 0.85);
                     poolGrad.addColorStop(0, `rgba(255,190,100,${glowAlpha * 0.5})`);
                     poolGrad.addColorStop(1, 'rgba(255,190,100,0)');
                     ctx.fillStyle = poolGrad;
-                    ctx.beginPath(); ctx.ellipse(screenX, canvas.height * 0.9, glowR * 0.9, glowR * 0.28, 0, 0, Math.PI * 2); ctx.fill();
+                    ctx.beginPath(); ctx.ellipse(screenX, baseY, glowR * 0.9, glowR * 0.28, 0, 0, Math.PI * 2); ctx.fill();
                     ctx.restore();
 
                     // sprite do poste (respeita oclusão de paredes via zBuffer)
@@ -1624,7 +1808,7 @@
             while(angle > Math.PI) angle -= Math.PI*2;
 
             let screenX = (canvas.width / 2) * (1 + angle / (player.fov / 2));
-            let sSize = Math.min(canvas.height * 1.4, Math.abs(canvas.height / dist));
+            let sSize = Math.min(canvas.height * 1.4, Math.abs(projPlaneDist / dist));
             let spriteAspect = SPR_W / SPR_H;
             let spriteW = sSize * spriteAspect * 0.9;
             let spriteH = e.dying ? sSize * 0.45 : sSize;
@@ -1697,11 +1881,69 @@
     // Botões Principais
     document.getElementById('play-btn').onclick = () => { ensureAudio(); startGame(); };
     document.getElementById('restart-btn').onclick = () => { ensureAudio(); startGame(); };
+    document.getElementById('gameover-menu-btn').onclick = () => backToMenu();
+
+    // Pausa
+    const pauseBtn = document.getElementById('pause-btn');
+    const pauseScreen = document.getElementById('pause-screen');
+    pauseBtn.onclick = () => pauseGame();
+    document.getElementById('resume-btn').onclick = () => { ensureAudio(); resumeGame(); };
+    document.getElementById('pause-menu-btn').onclick = () => backToMenu();
+
+    window.addEventListener('keydown', (e) => {
+        if (e.code !== 'Escape') return;
+        if (gameState === 'PLAYING') pauseGame();
+        else if (gameState === 'PAUSED') resumeGame();
+    });
+
+    function pauseGame() {
+        if (gameState !== 'PLAYING') return;
+        gameState = 'PAUSED';
+        player.firing = false;
+        weaponLayer.classList.remove('firing-anim');
+        muzzleFlash.style.display = 'none';
+        stopAmbience();
+        pauseScreen.style.display = 'flex';
+        pauseBtn.style.display = 'none';
+        document.getElementById('mobile-controls').style.display = 'none';
+        if (document.pointerLockElement === canvas) document.exitPointerLock();
+    }
+
+    function resumeGame() {
+        if (gameState !== 'PAUSED') return;
+        gameState = 'PLAYING';
+        pauseScreen.style.display = 'none';
+        pauseBtn.style.display = 'flex';
+        document.getElementById('mobile-controls').style.display = isTouchDevice ? 'block' : 'none';
+        lastTime = 0;
+        startAmbience();
+        if (!isTouchDevice) canvas.requestPointerLock();
+    }
+
+    function backToMenu() {
+        gameState = 'MENU';
+        stopAmbience();
+        player.firing = false;
+        weaponLayer.classList.remove('firing-anim');
+        muzzleFlash.style.display = 'none';
+        if (document.pointerLockElement === canvas) document.exitPointerLock();
+        document.getElementById('hud').style.display = 'none';
+        document.getElementById('mobile-controls').style.display = 'none';
+        document.getElementById('pc-hint').style.display = 'none';
+        document.getElementById('reload-msg').style.display = 'none';
+        weaponLayer.style.display = 'none';
+        pauseScreen.style.display = 'none';
+        pauseBtn.style.display = 'none';
+        document.getElementById('gameover-screen').style.display = 'none';
+        document.getElementById('menu-screen').style.display = 'flex';
+    }
 
     function startGame() {
         document.getElementById('menu-screen').style.display = 'none';
         document.getElementById('gameover-screen').style.display = 'none';
+        pauseScreen.style.display = 'none';
         document.getElementById('hud').style.display = 'flex';
+        pauseBtn.style.display = 'flex';
         weaponLayer.style.display = 'block';
         document.getElementById('pc-hint').style.display = isTouchDevice ? 'none' : 'block';
         document.getElementById('mobile-controls').style.display = isTouchDevice ? 'block' : 'none';
@@ -1732,6 +1974,7 @@
         document.getElementById('pc-hint').style.display = 'none';
         document.getElementById('reload-msg').style.display = 'none';
         weaponLayer.style.display = 'none';
+        pauseBtn.style.display = 'none';
         document.getElementById('gameover-screen').style.display = 'flex';
         document.getElementById('final-time').innerText = survivalTime;
         document.getElementById('final-kills').innerText = killCount;
