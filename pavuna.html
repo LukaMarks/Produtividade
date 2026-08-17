@@ -14,7 +14,7 @@
             user-select: none; -webkit-user-select: none; touch-action: none;
         }
 
-        #game-container { position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; background: #000; }
+        #game-container { position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; background: #000; overflow: hidden; }
 
         /* CANVAS DINÂMICO */
         canvas {
@@ -136,7 +136,6 @@
         .glass-btn.btn-play { background: rgba(0, 00, 10, 0.6); border-color: rgba(150, 20, 20, 0.5); }
         .glass-btn.btn-danger { background: rgba(138, 40, 40, 0.8); border-color: rgba(138, 40, 40, 0.8); }
 
-        /* DESTAQUE DO MENU COM GAMEPAD */
         .gamepad-selected {
             box-shadow: 0 0 15px 4px #8a2be2, inset 0 0 10px #8a2be2 !important;
             border-color: #d8b4fe !important;
@@ -181,6 +180,12 @@
             display: flex; flex-direction: column; justify-content: center; align-items: center; background: rgba(10, 5, 20, 0.6); z-index: 30;
         }
 
+        #gameover-screen {
+            opacity: 0;
+            transition: opacity 1.5s ease-in;
+            z-index: 40;
+        }
+
         #pause-btn {
             position: absolute; top: calc(14px + env(safe-area-inset-top, 0px)); right: calc(14px + env(safe-area-inset-right, 0px)); z-index: 50;
             width: 42px; height: 42px; display: none; align-items: center; justify-content: center;
@@ -206,7 +211,6 @@
         #hp-bar { height: 100%; background: #fff; width: 100%; border-radius: 4px; transition: width 0.2s ease-out; }
         #reload-msg { position: absolute; bottom: 30%; left: 50%; transform: translateX(-50%); color: #e8c96a; font-weight: bold; font-size: 1rem; text-shadow: 2px 2px #000; z-index: 10; display: none; letter-spacing: 2px; }
 
-        /* ARMA BEM PEQUENA, DISCRETA E POSICIONADA MAIS ABAIXO DA MIRA CENTRAL */
         #weapon-layer {
             position: absolute; bottom: -6%; left: 50%; 
             transform-origin: 50% 100%;
@@ -243,6 +247,7 @@
 <body>
 <audio id="menu-music" src="sua_musica.mp3" loop></audio>
 <audio id="gameplay-music" src="music_gameplay.mp3" loop></audio>
+<audio id="gameover-music" src="gameover_music.mp3" loop></audio>
 
     <div id="crt-overlay"></div>
 
@@ -325,7 +330,7 @@
                 <h3>Créditos</h3>
                 <p style="color: #ccc; line-height: 1.6;">
                     <strong>Desenvolvedor:</strong> @lukamarks<br>
-                    <strong>Versão:</strong> 1.9 (Retro Edition) <br><br>
+                    <strong>Versão:</strong> 2.0 <br><br>
                     <span style="font-size: 0.9em;">Soldados do eixo tomaram a cidade francesa de Saint-Lô. Empunhe seu rifle e sobreviva.</span>
                 </p>
                 <button class="glass-btn" style="margin-top: 10px;" onclick="openMenu('main-nav')">VOLTAR</button>
@@ -488,9 +493,13 @@
     let killCount = 0;
     let particles = [];
     let tracers = [];
+    
+    let deathAnimationTimer = 0;
+    const DEATH_DURATION = 2.5;
 
     const menuMusic = document.getElementById('menu-music');
     const gameplayMusic = document.getElementById('gameplay-music');
+    const gameoverMusic = document.getElementById('gameover-music');
     let gameplayMusicEnabled = true;
 
     function toggleGameplayMusic(state) {
@@ -891,10 +900,6 @@
             });
         }
     }
-
-    /* ----------------------------------------------------
-       CONTROLES, GAMEPAD E TELA CHEIA AUTOMÁTICA
-       ---------------------------------------------------- */
     
     let gpButtonsLast = [];
     let gpNavCooldown = 0;
@@ -904,7 +909,6 @@
         const gps = navigator.getGamepads ? navigator.getGamepads() : [];
         const gp = gps[0]; 
         
-        // Detecção automática se há controle conectado
         let connectedNow = !!gp;
         if (connectedNow !== isGamepadConnected) {
             isGamepadConnected = connectedNow;
@@ -936,7 +940,7 @@
         if (isGamepadConnected) {
             mobileControlsDiv.style.display = 'none';
             pcHintDiv.innerHTML = '🎮 Controle conectado ativado';
-            pcHintDiv.style.display = 'block';
+            if(gameState === 'PLAYING') pcHintDiv.style.display = 'block';
         } else {
             if (isTouchDevice && gameState === 'PLAYING') {
                 mobileControlsDiv.style.display = 'block';
@@ -1000,12 +1004,10 @@
             gpNavCooldown = 0;
         }
 
-        // CONFIRMAR (A / X)
         if (justPressed(0)) {
             if (focusedEl) { focusedEl.click(); ensureAudio(); }
         }
 
-        // VOLTAR (B / Círculo)
         if (justPressed(1)) {
             if (gameState === 'MENU' && document.getElementById('main-nav').style.display === 'none') {
                 openMenu('main-nav');
@@ -1252,22 +1254,30 @@
     function update(dt) {
         survivalTime = Math.floor((performance.now() - startTime) / 1000);
         document.getElementById('time-val').innerText = survivalTime; document.getElementById('hp-val').innerText = Math.max(0, Math.floor(player.hp)); document.getElementById('hp-bar').style.width = Math.max(0, player.hp) + '%';
-        bloodScreen.style.opacity = Math.pow(Math.max(0, Math.min(1, (100 - player.hp) / 100)), 0.85).toFixed(3);
+        
+        if (gameState === 'PLAYING') {
+            bloodScreen.style.opacity = Math.pow(Math.max(0, Math.min(1, (100 - player.hp) / 100)), 0.85).toFixed(3);
+        }
+
         if (player.shakeTimer > 0) player.shakeTimer -= dt;
+        
         if (player.firing && !player.reloading && gameState === 'PLAYING') {
             player.shootCd -= dt; if (player.shootCd <= 0) { fireBullet(); player.shootCd = FIRE_RATE; }
         }
+        
         if (player.hp > 0 && player.hp < 100 && (performance.now() - player.lastDamageTime) > REGEN_DELAY) player.hp = Math.min(100, player.hp + REGEN_RATE * dt);
         if (player.reloading) { player.reloadTimer -= dt; if (player.reloadTimer <= 0) { player.reloading = false; player.ammo = player.maxAmmo; document.getElementById('ammo-val').innerText = player.ammo; document.getElementById('reload-msg').style.display = 'none'; } }
         spawnTimer += dt; if (spawnTimer > Math.max(1.4, 3.6 - (survivalTime * 0.04)) && enemies.length < 14) { spawnEnemy(); spawnTimer = 0; }
 
-        let kb = readKeyboardMovement();
-        let fwd = Math.max(-1, Math.min(1, player.moveFwd + kb.fwd + (player.gpFwd || 0)));
-        let str = Math.max(-1, Math.min(1, player.moveStr + kb.str + (player.gpStr || 0)));
+        if (gameState === 'PLAYING') {
+            let kb = readKeyboardMovement();
+            let fwd = Math.max(-1, Math.min(1, player.moveFwd + kb.fwd + (player.gpFwd || 0)));
+            let str = Math.max(-1, Math.min(1, player.moveStr + kb.str + (player.gpStr || 0)));
 
-        updateWeaponTransform(dt, fwd, str);
-        let moveSpeed = (player.isAiming ? 2.2 : 3.5) * dt, cos = Math.cos(player.dir), sin = Math.sin(player.dir), nx = player.x + (cos * fwd - sin * str) * moveSpeed, ny = player.y + (sin * fwd + cos * str) * moveSpeed;
-        if (map[Math.floor(player.y)][Math.floor(nx)] === 0) player.x = nx; if (map[Math.floor(ny)][Math.floor(player.x)] === 0) player.y = ny;
+            updateWeaponTransform(dt, fwd, str);
+            let moveSpeed = (player.isAiming ? 2.2 : 3.5) * dt, cos = Math.cos(player.dir), sin = Math.sin(player.dir), nx = player.x + (cos * fwd - sin * str) * moveSpeed, ny = player.y + (sin * fwd + cos * str) * moveSpeed;
+            if (map[Math.floor(player.y)][Math.floor(nx)] === 0) player.x = nx; if (map[Math.floor(ny)][Math.floor(player.x)] === 0) player.y = ny;
+        }
 
         for (let i = particles.length - 1; i >= 0; i--) { let p = particles[i]; p.life -= dt; p.x += p.vx * dt; p.y += p.vy * dt; p.vy += 140 * dt; if (p.life <= 0) particles.splice(i, 1); }
         for (let i = tracers.length - 1; i >= 0; i--) { tracers[i].life -= dt; if (tracers[i].life <= 0) tracers.splice(i, 1); }
@@ -1279,12 +1289,17 @@
             if (dist > 6 || !losClear) { let ex = enemy.x + (dx/dist)*1.5*dt, ey = enemy.y + (dy/dist)*1.5*dt; if (map[Math.floor(enemy.y)] && map[Math.floor(enemy.y)][Math.floor(ex)] === 0) enemy.x = ex; if (map[Math.floor(ey)] && map[Math.floor(ey)][Math.floor(enemy.x)] === 0) enemy.y = ey; }
             else if (dist < 1.8) { let ex = enemy.x - (dx/dist)*1.2*dt, ey = enemy.y - (dy/dist)*1.2*dt; if (map[Math.floor(enemy.y)] && map[Math.floor(enemy.y)][Math.floor(ex)] === 0) enemy.x = ex; if (map[Math.floor(ey)] && map[Math.floor(ey)][Math.floor(enemy.x)] === 0) enemy.y = ey; }
             enemy.shootCd -= dt;
-            if (enemy.shootCd <= 0 && losClear && dist < 11) {
+            
+            if (enemy.shootCd <= 0 && losClear && dist < 11 && gameState === 'PLAYING') {
                 enemy.shootCd = 1.1 + Math.random() * 1.3 - Math.min(0.5, survivalTime * 0.01);
                 tracers.push({ ex: enemy.x, ey: enemy.y, life: 0.12 }); playShot(false);
                 if (Math.random() < Math.max(0.12, Math.min(0.7, 0.68 - dist * 0.045))) {
                     player.hp -= 6 + Math.random() * 9; player.lastDamageTime = performance.now(); player.shakeTimer = 0.2; damageFlash.style.opacity = '0.55'; setTimeout(() => damageFlash.style.opacity = '0', 60); playPainScream();
-                    if (player.hp <= 0) { player.hp = 0; gameOver(); }
+                    
+                    if (player.hp <= 0 && gameState !== 'DYING' && gameState !== 'GAMEOVER') { 
+                        player.hp = 0; 
+                        startDeathSequence(); 
+                    }
                 }
             }
         });
@@ -1293,6 +1308,21 @@
 
     function render() {
         ctx.save();
+        
+        // Se estiver morrendo, aplicamos a transformação diretamente no contexto 2D com escala extra para preencher o fundo
+        if (gameState === 'DYING') {
+            let progress = Math.min(1, deathAnimationTimer / DEATH_DURATION);
+            let ease = progress * progress; 
+            let tiltAngle = ease * (Math.PI / 2.3); // ~75 graus em radianos para o ctx.rotate
+            let fallOffset = ease * (canvas.height * 0.5); 
+            let scaleBoost = 1 + ease * 0.35; // Expande a imagem para nunca mostrar bordas pretas nos cantos
+
+            ctx.translate(canvas.width / 2, canvas.height / 2 + fallOffset);
+            ctx.rotate(tiltAngle);
+            ctx.scale(scaleBoost, scaleBoost);
+            ctx.translate(-canvas.width / 2, -canvas.height / 2);
+        }
+
         if (player.shakeTimer > 0) { let s = 4 + player.shakeTimer * 26; ctx.translate((Math.random()*2-1) * s, (Math.random()*2-1) * s); }
         let isNight = gameMode === 'night';
 
@@ -1422,12 +1452,60 @@
         ctx.restore();
     }
 
+    function startDeathSequence() {
+        gameState = 'DYING';
+        deathAnimationTimer = 0;
+        player.firing = false;
+        
+        stopAmbience();
+        resetGameplayMusic();
+        playPainScream(); 
+
+        document.getElementById('hud').style.display = 'none';
+        document.getElementById('mobile-controls').style.display = 'none';
+        document.getElementById('pc-hint').style.display = 'none';
+        document.getElementById('reload-msg').style.display = 'none';
+        weaponLayer.style.display = 'none';
+        pauseBtn.style.display = 'none';
+    }
+
+    function showGameOverUI() {
+        gameState = 'GAMEOVER';
+        
+        const goScreen = document.getElementById('gameover-screen');
+        goScreen.style.display = 'flex';
+        setTimeout(() => { goScreen.style.opacity = '1'; }, 50);
+
+        document.getElementById('final-time').innerText = survivalTime;
+        document.getElementById('final-kills').innerText = killCount;
+        
+        if (document.pointerLockElement === canvas) document.exitPointerLock();
+
+        gameoverMusic.currentTime = 0;
+        gameoverMusic.play().catch(e => console.log("Aguardando interação do áudio de game over."));
+    }
+
     function gameLoop(now) {
         if (!lastTime) lastTime = now; let dt = Math.min(0.1, (now - lastTime) / 1000); lastTime = now;
         
         updateGamepad(dt); 
         
-        if (gameState === 'PLAYING') { update(dt); render(); }
+        if (gameState === 'PLAYING') { 
+            update(dt); 
+            render(); 
+        } else if (gameState === 'DYING') {
+            deathAnimationTimer += dt;
+            
+            bloodScreen.style.opacity = Math.min(1, (deathAnimationTimer / DEATH_DURATION) * 1.5).toFixed(3);
+
+            update(dt);
+            render();
+
+            if (deathAnimationTimer >= DEATH_DURATION) {
+                showGameOverUI();
+            }
+        }
+        
         requestAnimationFrame(gameLoop);
     }
 
@@ -1459,6 +1537,7 @@
         document.getElementById('mobile-controls').style.display = 'none';
         if (document.pointerLockElement === canvas) document.exitPointerLock();
     }
+    
     function resumeGame() {
         if (gameState !== 'PAUSED') return; gameState = 'PLAYING';
         pauseScreen.style.display = 'none'; pauseBtn.style.display = 'flex';
@@ -1468,20 +1547,32 @@
         applyControllerUIVisibility();
         lastTime = 0; startAmbience(); if (!isTouchDevice && !isGamepadConnected) canvas.requestPointerLock();
     }
+    
+    function resetCameraEffects() {
+        document.getElementById('gameover-screen').style.opacity = '0';
+        gameoverMusic.pause();
+        gameoverMusic.currentTime = 0;
+    }
+
     function backToMenu() {
         gameState = 'MENU'; playMenuMusic(); stopAmbience(); resetGameplayMusic();
         player.firing = false; 
+        resetCameraEffects();
+        
         if (document.pointerLockElement === canvas) document.exitPointerLock();
         document.getElementById('hud').style.display = 'none'; document.getElementById('mobile-controls').style.display = 'none'; document.getElementById('pc-hint').style.display = 'none'; document.getElementById('reload-msg').style.display = 'none'; weaponLayer.style.display = 'none'; pauseScreen.style.display = 'none'; pauseBtn.style.display = 'none'; document.getElementById('gameover-screen').style.display = 'none';
         document.getElementById('menu-wrapper').style.display = 'flex';
         openMenu('main-nav');
     }
+    
     function startGame() {
         stopMenuMusic(); 
-        requestFullScreen(); // Entra em tela cheia automaticamente ao apertar JOGAR
+        requestFullScreen(); 
         
         gameState = 'PLAYING';
         resetGameplayMusic(); 
+        resetCameraEffects();
+
         if (gameplayMusicEnabled) {
             playGameplayMusic();
         }
@@ -1499,20 +1590,13 @@
         applyControllerUIVisibility();
 
         player.x = PLAYER_START_X; player.y = PLAYER_START_Y; player.hp = 100; player.dir = 0; player.ammo = player.maxAmmo; player.reloading = false; player.shootCd = 0; player.shakeTimer = 0; player.firing = false; player.lastDamageTime = performance.now();
-        weaponBobPhase = 0; weaponKick = 0; weaponTremor = 0; aimBlend = 0; weaponLayer.style.transform = 'translate(0,0) rotate(0deg) scale(1)'; bloodScreen.style.opacity = 0;
+        weaponBobPhase = 0; weaponKick = 0; weaponTremor = 0; aimBlend = 0; bloodScreen.style.opacity = 0;
+        
         document.getElementById('ammo-val').innerText = player.ammo; document.getElementById('ammo-max').innerText = player.maxAmmo; document.getElementById('kills-val').innerText = 0; document.getElementById('reload-msg').style.display = 'none'; enemies = []; particles = []; tracers = []; spawnTimer = 0; startTime = performance.now(); killCount = 0; startAmbience();
         
         if (!isTouchDevice && !isGamepadConnected) {
             setTimeout(() => { canvas.requestPointerLock(); }, 100);
         }
-    }
-    function gameOver() {
-        gameState = 'GAMEOVER'; stopAmbience(); player.firing = false; 
-        resetGameplayMusic();
-        menuFocusIndex = 0; 
-        document.getElementById('hud').style.display = 'none'; document.getElementById('mobile-controls').style.display = 'none'; document.getElementById('pc-hint').style.display = 'none'; document.getElementById('reload-msg').style.display = 'none'; weaponLayer.style.display = 'none'; pauseBtn.style.display = 'none';
-        document.getElementById('gameover-screen').style.display = 'flex'; document.getElementById('final-time').innerText = survivalTime; document.getElementById('final-kills').innerText = killCount;
-        if (document.pointerLockElement === canvas) document.exitPointerLock();
     }
 
     requestAnimationFrame(gameLoop);
