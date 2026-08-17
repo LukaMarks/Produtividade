@@ -136,6 +136,26 @@
         .glass-btn.btn-play { background: rgba(0, 00, 10, 0.6); border-color: rgba(150, 20, 20, 0.5); }
         .glass-btn.btn-danger { background: rgba(138, 40, 40, 0.8); border-color: rgba(138, 40, 40, 0.8); }
 
+        /* DESTAQUE DO MENU COM GAMEPAD */
+        .gamepad-selected {
+            box-shadow: 0 0 15px 4px #8a2be2, inset 0 0 10px #8a2be2 !important;
+            border-color: #d8b4fe !important;
+            transform: scale(1.05);
+            transition: all 0.15s ease;
+            outline: none;
+        }
+        .mode-btn.gamepad-selected {
+            background-color: rgba(138, 43, 226, 0.5);
+            color: #fff;
+        }
+        input[type="range"].gamepad-selected {
+            box-shadow: 0 0 12px 2px #8a2be2;
+        }
+        input[type="range"].gamepad-selected::-webkit-slider-thumb {
+            box-shadow: 0 0 15px #d8b4fe;
+            background: #d8b4fe;
+        }
+
         .glass-panel h3 { font-family: 'Times New Roman', serif; letter-spacing: 2px; margin-bottom: 10px; font-size: 1.5rem; text-transform: uppercase;}
         
         .sens-row, .mode-row { display: flex; flex-direction: column; align-items: center; width: 100%; margin-bottom: 10px;}
@@ -190,7 +210,7 @@
         #weapon-layer {
             position: absolute; bottom: -6%; left: 50%; 
             transform-origin: 50% 100%;
-            width: clamp(140px, 32vmin, 220px); /* Bem menor e mais compacta */
+            width: clamp(140px, 32vmin, 220px); 
             aspect-ratio: 1 / 1;
             margin-left: calc(clamp(140px, 32vmin, 220px) / -2);
             z-index: 5; pointer-events: none; display: none; 
@@ -383,7 +403,7 @@
             </div>
         </div>
         <div id="reload-msg">RECARREGANDO...</div>
-        <div id="pc-hint">WASD mover · Mouse/Espaço atira · R recarregar</div>
+        <div id="pc-hint">WASD mover · Mouse atira · R recarregar<br>🎮 Suporte a Controle</div>
 
         <!-- Arma Canvas -->
         <canvas id="weapon-layer" width="200" height="200"></canvas>
@@ -421,6 +441,7 @@
 <script>
     let crtEnabled = true; 
     let gfxQuality = 'medium'; 
+    let menuFocusIndex = 0; 
 
     function toggleCRT(state) {
         crtEnabled = state;
@@ -452,6 +473,8 @@
         document.getElementById('main-nav').style.display = 'none';
         document.getElementById('options-panel').style.display = 'none';
         document.getElementById('credits-panel').style.display = 'none';
+        
+        menuFocusIndex = 0; 
 
         if(menuId === 'main-nav') {
             document.getElementById('main-nav').style.display = 'flex';
@@ -776,6 +799,7 @@
 
     let player = {
         x: 1.5, y: 1.5, dir: 0, hp: 100, fov: Math.PI / 3, isAiming: false, moveFwd: 0, moveStr: 0,
+        gpFwd: 0, gpStr: 0,
         ammo: 30, maxAmmo: 30, reloading: false, reloadTimer: 0, shootCd: 0, shakeTimer: 0, firing: false, lastDamageTime: 0
     };
     const FIRE_RATE = 0.1, REGEN_DELAY = 4000, REGEN_RATE = 9;
@@ -868,6 +892,163 @@
         }
     }
 
+    /* ----------------------------------------------------
+       CONTROLES, GAMEPAD E TELA CHEIA AUTOMÁTICA
+       ---------------------------------------------------- */
+    
+    let gpButtonsLast = [];
+    let gpNavCooldown = 0;
+    let isGamepadConnected = false;
+
+    function updateGamepad(dt) {
+        const gps = navigator.getGamepads ? navigator.getGamepads() : [];
+        const gp = gps[0]; 
+        
+        // Detecção automática se há controle conectado
+        let connectedNow = !!gp;
+        if (connectedNow !== isGamepadConnected) {
+            isGamepadConnected = connectedNow;
+            applyControllerUIVisibility();
+        }
+
+        if (!gp) return;
+
+        if (gpNavCooldown > 0) gpNavCooldown -= dt;
+
+        const isPressed = (idx) => gp.buttons[idx] && gp.buttons[idx].pressed;
+        const justPressed = (idx) => isPressed(idx) && !gpButtonsLast[idx];
+
+        if (gameState === 'MENU' || gameState === 'PAUSED' || gameState === 'GAMEOVER') {
+            handleMenuGamepad(gp, isPressed, justPressed, dt);
+        } else if (gameState === 'PLAYING') {
+            handleGameplayGamepad(gp, isPressed, justPressed, dt);
+        }
+
+        for (let i = 0; i < gp.buttons.length; i++) {
+            gpButtonsLast[i] = isPressed(i);
+        }
+    }
+
+    function applyControllerUIVisibility() {
+        const mobileControlsDiv = document.getElementById('mobile-controls');
+        const pcHintDiv = document.getElementById('pc-hint');
+
+        if (isGamepadConnected) {
+            mobileControlsDiv.style.display = 'none';
+            pcHintDiv.innerHTML = '🎮 Controle conectado ativado';
+            pcHintDiv.style.display = 'block';
+        } else {
+            if (isTouchDevice && gameState === 'PLAYING') {
+                mobileControlsDiv.style.display = 'block';
+                pcHintDiv.style.display = 'none';
+            } else if (!isTouchDevice && gameState === 'PLAYING') {
+                mobileControlsDiv.style.display = 'none';
+                pcHintDiv.innerHTML = 'WASD mover · Mouse atira · R recarregar';
+                pcHintDiv.style.display = 'block';
+            }
+        }
+    }
+
+    function handleMenuGamepad(gp, isPressed, justPressed, dt) {
+        let activePanel = null;
+        if (gameState === 'MENU') {
+            if (document.getElementById('main-nav').style.display !== 'none') activePanel = document.getElementById('main-nav');
+            else if (document.getElementById('options-panel').style.display !== 'none') activePanel = document.getElementById('options-panel');
+            else if (document.getElementById('credits-panel').style.display !== 'none') activePanel = document.getElementById('credits-panel');
+        } else if (gameState === 'PAUSED') {
+            activePanel = document.getElementById('pause-screen').querySelector('.glass-panel');
+        } else if (gameState === 'GAMEOVER') {
+            activePanel = document.getElementById('gameover-screen').querySelector('.glass-panel');
+        }
+
+        if (!activePanel) return;
+
+        let elements = Array.from(activePanel.querySelectorAll('button, input[type="range"]')).filter(el => el.offsetParent !== null);
+        
+        elements.forEach(el => el.classList.remove('gamepad-selected'));
+        if (menuFocusIndex >= elements.length) menuFocusIndex = 0;
+        if (menuFocusIndex < 0) menuFocusIndex = elements.length - 1;
+        
+        let focusedEl = elements[menuFocusIndex];
+        if (focusedEl) focusedEl.classList.add('gamepad-selected');
+
+        let navX = 0, navY = 0;
+        let ax = gp.axes[0] || 0, ay = gp.axes[1] || 0;
+        
+        if (ax < -0.5) navX = -1; else if (ax > 0.5) navX = 1;
+        if (ay < -0.5) navY = -1; else if (ay > 0.5) navY = 1;
+
+        if (isPressed(12)) navY = -1; 
+        if (isPressed(13)) navY = 1;  
+        if (isPressed(14)) navX = -1; 
+        if (isPressed(15)) navX = 1;  
+
+        if ((navX !== 0 || navY !== 0) && gpNavCooldown <= 0) {
+            if (focusedEl && focusedEl.tagName.toLowerCase() === 'input' && navX !== 0) {
+                let step = parseFloat(focusedEl.step) || 1;
+                let val = parseFloat(focusedEl.value);
+                focusedEl.value = val + (navX * step);
+                focusedEl.dispatchEvent(new Event('input'));
+            } else {
+                if (navY !== 0) menuFocusIndex += navY;
+                else if (navX !== 0) menuFocusIndex += navX;
+            }
+            gpNavCooldown = 0.22; 
+        }
+
+        if (navX === 0 && navY === 0 && !isPressed(12) && !isPressed(13) && !isPressed(14) && !isPressed(15)) {
+            gpNavCooldown = 0;
+        }
+
+        // CONFIRMAR (A / X)
+        if (justPressed(0)) {
+            if (focusedEl) { focusedEl.click(); ensureAudio(); }
+        }
+
+        // VOLTAR (B / Círculo)
+        if (justPressed(1)) {
+            if (gameState === 'MENU' && document.getElementById('main-nav').style.display === 'none') {
+                openMenu('main-nav');
+            } else if (gameState === 'PAUSED') {
+                resumeGame();
+            }
+        }
+        
+        if (gameState === 'PAUSED' && justPressed(9)) resumeGame(); 
+    }
+
+    function handleGameplayGamepad(gp, isPressed, justPressed, dt) {
+        let ax = gp.axes[0] || 0, ay = gp.axes[1] || 0;
+        if (Math.abs(ax) < 0.15) ax = 0;
+        if (Math.abs(ay) < 0.15) ay = 0;
+
+        let fwd = -ay;
+        let str = ax;
+
+        if (isPressed(12)) fwd = 1;  
+        if (isPressed(13)) fwd = -1; 
+        if (isPressed(14)) str = -1; 
+        if (isPressed(15)) str = 1;  
+
+        player.gpFwd = fwd;
+        player.gpStr = str;
+
+        let cx = gp.axes[2] || 0;
+        if (Math.abs(cx) > 0.15) {
+            player.dir += cx * 2.8 * dt * sensMultiplier; 
+        }
+
+        if (isPressed(7) && !gpButtonsLast[7]) { ensureAudio(); player.firing = true; player.gpFire = true; }
+        if (!isPressed(7) && gpButtonsLast[7]) { player.firing = false; player.gpFire = false; }
+        
+        if (isPressed(6) && !gpButtonsLast[6]) { player.isAiming = true; player.fov = (Math.PI / 3) * 0.6; player.gpAim = true; }
+        if (!isPressed(6) && gpButtonsLast[6]) { player.isAiming = false; player.fov = Math.PI / 3; player.gpAim = false; }
+
+        if (justPressed(2)) startReload();
+        if (justPressed(9)) pauseGame();
+    }
+
+
     const joyBase = document.getElementById('joystick-base'), joyStick = document.getElementById('joystick-stick');
     let joyActive = false, joyCenter = { x: 0, y: 0 };
     joyBase.addEventListener('touchstart', (e) => { e.preventDefault(); joyActive = true; let rect = joyBase.getBoundingClientRect(); joyCenter.x = rect.left + rect.width / 2; joyCenter.y = rect.top + rect.height / 2; updateJoystick(e.targetTouches[0]); });
@@ -893,12 +1074,12 @@
             if (e.code === 'ShiftLeft' || e.code === 'ShiftRight') toggleAim(true);
         }
     });
-    window.addEventListener('keyup', (e) => { keys[e.code] = false; if (e.code === 'Space') player.firing = false; if (e.code === 'ShiftLeft' || e.code === 'ShiftRight') toggleAim(false); });
+    window.addEventListener('keyup', (e) => { keys[e.code] = false; if (e.code === 'Space' && !player.gpFire) player.firing = false; if ((e.code === 'ShiftLeft' || e.code === 'ShiftRight') && !player.gpAim) toggleAim(false); });
     function readKeyboardMovement() { let fwd = 0, str = 0; if (keys['KeyW'] || keys['ArrowUp']) fwd += 1; if (keys['KeyS'] || keys['ArrowDown']) fwd -= 1; if (keys['KeyD']) str += 1; if (keys['KeyA']) str -= 1; return { fwd, str }; }
-    canvas.addEventListener('click', () => { if (gameState !== 'PLAYING' || isTouchDevice) return; ensureAudio(); if (document.pointerLockElement !== canvas) canvas.requestPointerLock(); });
-    document.addEventListener('mousedown', () => { if (gameState === 'PLAYING' && document.pointerLockElement === canvas) { ensureAudio(); player.firing = true; } });
-    document.addEventListener('mouseup', () => { player.firing = false; });
-    document.addEventListener('mousemove', (e) => { if (document.pointerLockElement === canvas && gameState === 'PLAYING') player.dir += e.movementX * 0.0028 * sensMultiplier; });
+    canvas.addEventListener('click', () => { if (gameState !== 'PLAYING' || isTouchDevice || isGamepadConnected) return; ensureAudio(); if (document.pointerLockElement !== canvas) canvas.requestPointerLock(); });
+    document.addEventListener('mousedown', () => { if (gameState === 'PLAYING' && document.pointerLockElement === canvas && !isGamepadConnected) { ensureAudio(); player.firing = true; } });
+    document.addEventListener('mouseup', () => { if (!player.gpFire) player.firing = false; });
+    document.addEventListener('mousemove', (e) => { if (document.pointerLockElement === canvas && gameState === 'PLAYING' && !isGamepadConnected) player.dir += e.movementX * 0.0028 * sensMultiplier; });
     function toggleAim(state) { if (isTouchDevice) return; player.isAiming = state; player.fov = player.isAiming ? (Math.PI / 3) * 0.6 : (Math.PI / 3); }
 
     const weaponLayer = document.getElementById('weapon-layer');
@@ -924,7 +1105,6 @@
         const f = (x, y, w, h, c) => { ctx.fillStyle = c; ctx.fillRect(x*2, (y)*2, w*2, h*2); };
 
         if (isFiring || isAiming) {
-            // MODO MIRA RIGOROSA COMPACTA E MAIS ABAIXO DA MIRA
             let ry = isFiring ? 4 : 0; 
 
             r(18, 70+ry, 20, 45, '#2d3310'); 
@@ -959,7 +1139,6 @@
             }
 
         } else {
-            // MODO REPOUSO COMPACTO
             let ry = 0;
             r(55, 75+ry, 45, 30, '#2d3310'); 
             r(60, 80+ry, 40, 25, '#4b5320'); 
@@ -1059,16 +1238,16 @@
     }
 
     document.getElementById('shoot-btn').addEventListener('touchstart', (e) => { e.preventDefault(); ensureAudio(); player.firing = true; });
-    document.getElementById('shoot-btn').addEventListener('touchend', (e) => { e.preventDefault(); player.firing = false; });
+    document.getElementById('shoot-btn').addEventListener('touchend', (e) => { e.preventDefault(); if(!player.gpFire) player.firing = false; });
     document.getElementById('reload-btn').addEventListener('touchstart', (e) => { e.preventDefault(); ensureAudio(); startReload(); });
     const aimBtn = document.getElementById('aim-btn');
     aimBtn.addEventListener('touchstart', (e) => { e.preventDefault(); player.isAiming = !player.isAiming; player.fov = player.isAiming ? (Math.PI / 3) * 0.6 : (Math.PI / 3); aimBtn.classList.toggle('active', player.isAiming); });
 
     const aimZoneTop = document.getElementById('aim-zone-top'), shootZoneTop = document.getElementById('shoot-zone-top');
     aimZoneTop.addEventListener('touchstart', (e) => { e.preventDefault(); player.isAiming = true; player.fov = (Math.PI / 3) * 0.6; aimZoneTop.classList.add('active'); });
-    aimZoneTop.addEventListener('touchend', (e) => { e.preventDefault(); player.isAiming = false; player.fov = Math.PI / 3; aimZoneTop.classList.remove('active'); });
+    aimZoneTop.addEventListener('touchend', (e) => { e.preventDefault(); if(!player.gpAim) { player.isAiming = false; player.fov = Math.PI / 3; } aimZoneTop.classList.remove('active'); });
     shootZoneTop.addEventListener('touchstart', (e) => { e.preventDefault(); ensureAudio(); player.firing = true; shootZoneTop.classList.add('active'); });
-    shootZoneTop.addEventListener('touchend', (e) => { e.preventDefault(); player.firing = false; shootZoneTop.classList.remove('active'); });
+    shootZoneTop.addEventListener('touchend', (e) => { e.preventDefault(); if(!player.gpFire) player.firing = false; shootZoneTop.classList.remove('active'); });
 
     function update(dt) {
         survivalTime = Math.floor((performance.now() - startTime) / 1000);
@@ -1082,7 +1261,10 @@
         if (player.reloading) { player.reloadTimer -= dt; if (player.reloadTimer <= 0) { player.reloading = false; player.ammo = player.maxAmmo; document.getElementById('ammo-val').innerText = player.ammo; document.getElementById('reload-msg').style.display = 'none'; } }
         spawnTimer += dt; if (spawnTimer > Math.max(1.4, 3.6 - (survivalTime * 0.04)) && enemies.length < 14) { spawnEnemy(); spawnTimer = 0; }
 
-        let kb = readKeyboardMovement(), fwd = Math.max(-1, Math.min(1, player.moveFwd + kb.fwd)), str = Math.max(-1, Math.min(1, player.moveStr + kb.str));
+        let kb = readKeyboardMovement();
+        let fwd = Math.max(-1, Math.min(1, player.moveFwd + kb.fwd + (player.gpFwd || 0)));
+        let str = Math.max(-1, Math.min(1, player.moveStr + kb.str + (player.gpStr || 0)));
+
         updateWeaponTransform(dt, fwd, str);
         let moveSpeed = (player.isAiming ? 2.2 : 3.5) * dt, cos = Math.cos(player.dir), sin = Math.sin(player.dir), nx = player.x + (cos * fwd - sin * str) * moveSpeed, ny = player.y + (sin * fwd + cos * str) * moveSpeed;
         if (map[Math.floor(player.y)][Math.floor(nx)] === 0) player.x = nx; if (map[Math.floor(ny)][Math.floor(player.x)] === 0) player.y = ny;
@@ -1242,6 +1424,9 @@
 
     function gameLoop(now) {
         if (!lastTime) lastTime = now; let dt = Math.min(0.1, (now - lastTime) / 1000); lastTime = now;
+        
+        updateGamepad(dt); 
+        
         if (gameState === 'PLAYING') { update(dt); render(); }
         requestAnimationFrame(gameLoop);
     }
@@ -1254,11 +1439,23 @@
     document.getElementById('pause-menu-btn').onclick = () => backToMenu();
     window.addEventListener('keydown', (e) => { if (e.code === 'Escape') { if (gameState === 'PLAYING') pauseGame(); else if (gameState === 'PAUSED') resumeGame(); } });
 
+    function requestFullScreen() {
+        let elem = document.documentElement;
+        if (elem.requestFullscreen) {
+            elem.requestFullscreen().catch(err => console.log("Fullscreen bloqueado pelo navegador."));
+        } else if (elem.webkitRequestFullscreen) { /* Safari */
+            elem.webkitRequestFullscreen();
+        } else if (elem.msRequestFullscreen) { /* IE11 */
+            elem.msRequestFullscreen();
+        }
+    }
+
     function pauseGame() {
         if (gameState !== 'PLAYING') return; gameState = 'PAUSED';
         player.firing = false; stopAmbience();
         gameplayMusic.pause();
         pauseScreen.style.display = 'flex'; pauseBtn.style.display = 'none';
+        menuFocusIndex = 0; 
         document.getElementById('mobile-controls').style.display = 'none';
         if (document.pointerLockElement === canvas) document.exitPointerLock();
     }
@@ -1268,8 +1465,8 @@
         if (gameplayMusicEnabled) {
             gameplayMusic.play().catch(e => console.log("Aguardando interação."));
         }
-        document.getElementById('mobile-controls').style.display = isTouchDevice ? 'block' : 'none';
-        lastTime = 0; startAmbience(); if (!isTouchDevice) canvas.requestPointerLock();
+        applyControllerUIVisibility();
+        lastTime = 0; startAmbience(); if (!isTouchDevice && !isGamepadConnected) canvas.requestPointerLock();
     }
     function backToMenu() {
         gameState = 'MENU'; playMenuMusic(); stopAmbience(); resetGameplayMusic();
@@ -1281,6 +1478,7 @@
     }
     function startGame() {
         stopMenuMusic(); 
+        requestFullScreen(); // Entra em tela cheia automaticamente ao apertar JOGAR
         
         gameState = 'PLAYING';
         resetGameplayMusic(); 
@@ -1290,14 +1488,28 @@
 
         drawRetroWeapon(weaponCtx, false, false);
 
-        document.getElementById('menu-wrapper').style.display = 'none'; document.getElementById('gameover-screen').style.display = 'none'; pauseScreen.style.display = 'none'; document.getElementById('hud').style.display = 'flex'; pauseBtn.style.display = 'flex'; weaponLayer.style.display = 'block'; updateWeaponLayoutMetrics(); document.getElementById('pc-hint').style.display = isTouchDevice ? 'none' : 'block'; document.getElementById('mobile-controls').style.display = isTouchDevice ? 'block' : 'none';
+        document.getElementById('menu-wrapper').style.display = 'none'; 
+        document.getElementById('gameover-screen').style.display = 'none'; 
+        pauseScreen.style.display = 'none'; 
+        document.getElementById('hud').style.display = 'flex'; 
+        pauseBtn.style.display = 'flex'; 
+        weaponLayer.style.display = 'block'; 
+        updateWeaponLayoutMetrics(); 
+        
+        applyControllerUIVisibility();
+
         player.x = PLAYER_START_X; player.y = PLAYER_START_Y; player.hp = 100; player.dir = 0; player.ammo = player.maxAmmo; player.reloading = false; player.shootCd = 0; player.shakeTimer = 0; player.firing = false; player.lastDamageTime = performance.now();
         weaponBobPhase = 0; weaponKick = 0; weaponTremor = 0; aimBlend = 0; weaponLayer.style.transform = 'translate(0,0) rotate(0deg) scale(1)'; bloodScreen.style.opacity = 0;
         document.getElementById('ammo-val').innerText = player.ammo; document.getElementById('ammo-max').innerText = player.maxAmmo; document.getElementById('kills-val').innerText = 0; document.getElementById('reload-msg').style.display = 'none'; enemies = []; particles = []; tracers = []; spawnTimer = 0; startTime = performance.now(); killCount = 0; startAmbience();
+        
+        if (!isTouchDevice && !isGamepadConnected) {
+            setTimeout(() => { canvas.requestPointerLock(); }, 100);
+        }
     }
     function gameOver() {
         gameState = 'GAMEOVER'; stopAmbience(); player.firing = false; 
         resetGameplayMusic();
+        menuFocusIndex = 0; 
         document.getElementById('hud').style.display = 'none'; document.getElementById('mobile-controls').style.display = 'none'; document.getElementById('pc-hint').style.display = 'none'; document.getElementById('reload-msg').style.display = 'none'; weaponLayer.style.display = 'none'; pauseBtn.style.display = 'none';
         document.getElementById('gameover-screen').style.display = 'flex'; document.getElementById('final-time').innerText = survivalTime; document.getElementById('final-kills').innerText = killCount;
         if (document.pointerLockElement === canvas) document.exitPointerLock();
