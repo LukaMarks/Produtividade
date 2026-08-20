@@ -70,7 +70,7 @@
             z-index: 30;
             display: flex; flex-direction: column; align-items: center; justify-content: space-between;
             overflow: hidden;
-            background: linear-gradient(180deg, #0f0a1c 0%, #1e1b30 40%, #2a2c3f 70%, #15161d 100%);
+            background: linear-gradient(180deg, #0f0a1c 0%, #ff3b1d 40%, #2a2c3f 70%, #000000 100%);
         }
 
         .cloud-layer {
@@ -110,7 +110,7 @@
         .moh-title h2 { font-size: clamp(1rem, 3vw, 2rem); font-weight: normal; letter-spacing: 14px; margin: 0; margin-left: 14px; color: #ddd; }
         .moh-line {
             width: 80%; max-width: 500px; height: 2px;
-            background: linear-gradient(90deg, transparent, #b30000, transparent); margin: 20px auto; box-shadow: 0 0 10px #b30000;
+            background: linear-gradient(90deg, transparent, #0b00b3de, transparent); margin: 20px auto; box-shadow: 0 0 10px #b30000;
         }
 
         #main-nav { z-index: 10; margin-bottom: 8vh; display: flex; gap: 15px; flex-wrap: wrap; justify-content: center; padding: 0 20px; }
@@ -265,7 +265,7 @@
                 <div class="moh-line"></div>
               <h2>Saint-Lô, 1944.</h2>
               <br>
-              <h4>by @lukamarks</h4><br>
+              <h5>@LUKAMARKS</h5><br>
             </div>
             
             <div id="main-nav">
@@ -273,7 +273,8 @@
                 <button class="glass-btn" onclick="openMenu('options-panel')">OPÇÕES</button>
                 <button class="glass-btn" onclick="openMenu('credits-panel')">CRÉDITOS</button>
             </div>
-
+            <div>
+            <H6>BETA</H6></div>
             <div id="options-panel" class="glass-panel">
                 <h3>Opções de Jogo</h3>
                 
@@ -303,7 +304,7 @@
                 </div>
 
                 <div class="mode-row">
-                    <label>Música (Gameplay)</label>
+                    <label>Vozes / Músicas</label>
                     <div class="mode-btns">
                         <button type="button" class="mode-btn" id="music-off-main" onclick="toggleGameplayMusic(false)">DESLIGADA</button>
                         <button type="button" class="mode-btn active" id="music-on-main" onclick="toggleGameplayMusic(true)">LIGADA</button>
@@ -330,16 +331,20 @@
                 <h3>Créditos</h3>
                 <p style="color: #ccc; line-height: 1.6;">
                     <strong>Desenvolvedor:</strong> @lukamarks<br>
-                    <strong>Versão:</strong> 2.0 <br><br>
-                    <span style="font-size: 0.9em;">Soldados do eixo tomaram a cidade francesa de Saint-Lô. Empunhe seu rifle e sobreviva.</span>
+                    <strong>Versão:</strong> 0.3.1 <br><br>
+                  
+                  <h4>Vozes:</h4>
+                  <span style="font-size: 0.9em;"><strong>Rádio 1: </strong>Lucas Marques</span>
+                    <span style="font-size: 0.9em;"><strong>Rádio 2: </strong>Welber Marques</span>
+                  <span style="font-size: 0.9em;"><strong>Soldado: </strong>Lucas Gabriel</span
                 </p>
                 <button class="glass-btn" style="margin-top: 10px;" onclick="openMenu('main-nav')">VOLTAR</button>
             </div>
         </div>
 
         <div id="gameover-screen" class="overlay" style="display: none;">
-            <div class="glass-panel" style="display: flex; border-color: rgba(200, 40, 40, 0.4);">
-                <h1 style="color: #ff4c4c; font-family: 'Times New Roman', serif; margin-bottom: 0;">FIM DE JOGO</h1>
+            <div class="glass-panel" style="display: flex; border-color: rgba(255, 3, 3, 0.526);">
+                <h1 style="color: #fdfcfc; font-family: 'Times New Roman', serif; margin-bottom: 0;">FIM DE JOGO</h1>
                 <div class="moh-line" style="width: 100%; margin: 10px 0;"></div>
                 <div style="display:flex; justify-content: space-around; width: 100%; margin-bottom: 20px; font-size: 1.1rem;">
                     <div>TEMPO: <strong id="final-time" style="color:#e8c96a;">0</strong>s</div>
@@ -366,16 +371,16 @@
                 <div class="mode-row" style="margin-bottom: 5px;">
                     <label>Filtro CRT</label>
                     <div class="mode-btns">
-                        <button type="button" class="mode-btn" id="crt-off-pause" onclick="toggleCRT(false)">OFF</button>
-                        <button type="button" class="mode-btn active" id="crt-on-pause" onclick="toggleCRT(true)">ON</button>
+                        <button type="button" class="mode-btn" id="crt-off-pause" onclick="toggleCRT(false)">DESATIVAR</button>
+                        <button type="button" class="mode-btn active" id="crt-on-pause" onclick="toggleCRT(true)">ATIVAR</button>
                     </div>
                 </div>
 
                 <div class="mode-row" style="margin-bottom: 5px;">
-                    <label>Música (Gameplay)</label>
+                    <label>Vozes / Musicas</label>
                     <div class="mode-btns">
-                        <button type="button" class="mode-btn" id="music-off-pause" onclick="toggleGameplayMusic(false)">OFF</button>
-                        <button type="button" class="mode-btn active" id="music-on-pause" onclick="toggleGameplayMusic(true)">ON</button>
+                        <button type="button" class="mode-btn" id="music-off-pause" onclick="toggleGameplayMusic(false)">DESATIVAR</button>
+                        <button type="button" class="mode-btn active" id="music-on-pause" onclick="toggleGameplayMusic(true)">ATIVAR</button>
                     </div>
                 </div>
 
@@ -407,7 +412,7 @@
                 ABATES: <span id="kills-val">0</span> &nbsp;|&nbsp; MUN: <span id="ammo-val">30</span>/<span id="ammo-max">30</span>
             </div>
         </div>
-        <div id="reload-msg">RECARREGANDO...</div>
+        <div id="reload-msg"></div>
         <div id="pc-hint">WASD mover · Mouse atira · R recarregar<br>🎮 Suporte a Controle</div>
 
         <!-- Arma Canvas -->
@@ -1400,29 +1405,29 @@
             }
         }
 
-        if (isNight) {
-            lampPosts.map(l => ({ l, d: (l.x - player.x) ** 2 + (l.y - player.y) ** 2 })).filter(o => o.d < 130).sort((a, b) => b.d - a.d).forEach(item => {
-                let l = item.l, d = Math.sqrt(item.d), ang = Math.atan2(l.y - player.y, l.x - player.x) - player.dir;
-                while (ang < -Math.PI) ang += Math.PI * 2; while (ang > Math.PI) ang -= Math.PI * 2;
-                if (Math.abs(ang) > player.fov * 0.85) return;
-                let sX = (canvas.width / 2) * (1 + ang / (player.fov / 2)), sS = Math.min(canvas.height * 1.6, Math.abs(pDist / d)), sW = sS * (LAMP_W / LAMP_H) * 0.55, sH = sS * 0.98, dY = (canvas.height - sH) / 2 + sS * 0.06;
-                if (d > 0.2 && sX > -sW && sX < canvas.width + sW) {
-                    let left = sX - sW / 2;
-                    
-                    if(gfxQuality !== 'low') {
-                        let gR = Math.max(10, sS * 0.9), gA = Math.max(0, 0.55 - d * 0.045);
-                        ctx.save(); ctx.globalCompositeOperation = 'lighter';
-                        let glow = ctx.createRadialGradient(sX, dY + sH * 0.14, 0, sX, dY + sH * 0.14, gR); glow.addColorStop(0, `rgba(255,205,110,${gA})`); glow.addColorStop(0.5, `rgba(255,160,60,${gA * 0.4})`); glow.addColorStop(1, 'rgba(255,160,60,0)');
-                        ctx.fillStyle = glow; ctx.beginPath(); ctx.arc(sX, dY + sH * 0.14, gR, 0, Math.PI * 2); ctx.fill();
-                        let pool = ctx.createRadialGradient(sX, dY + sH, 0, sX, dY + sH, gR * 0.85); pool.addColorStop(0, `rgba(255,190,100,${gA * 0.5})`); pool.addColorStop(1, 'rgba(255,190,100,0)');
-                        ctx.fillStyle = pool; ctx.beginPath(); ctx.ellipse(sX, dY + sH, gR * 0.9, gR * 0.28, 0, 0, Math.PI * 2); ctx.fill(); ctx.restore();
-                    }
-
-                    let cS = Math.max(1, Math.floor(sW / LAMP_W));
-                    for (let x = 0; x < sW; x += cS) { let pX = Math.floor(left + x); if (pX >= 0 && pX < canvas.width && zBuff[pX] > d) ctx.drawImage(lampSprite, Math.floor((x / sW) * LAMP_W), 0, cS, LAMP_H, pX, dY, cS, sH); }
+        // AGORA OS POSTES SÃO RENDERIZADOS EM QUALQUER HORÁRIO
+        lampPosts.map(l => ({ l, d: (l.x - player.x) ** 2 + (l.y - player.y) ** 2 })).filter(o => o.d < 130).sort((a, b) => b.d - a.d).forEach(item => {
+            let l = item.l, d = Math.sqrt(item.d), ang = Math.atan2(l.y - player.y, l.x - player.x) - player.dir;
+            while (ang < -Math.PI) ang += Math.PI * 2; while (ang > Math.PI) ang -= Math.PI * 2;
+            if (Math.abs(ang) > player.fov * 0.85) return;
+            let sX = (canvas.width / 2) * (1 + ang / (player.fov / 2)), sS = Math.min(canvas.height * 1.6, Math.abs(pDist / d)), sW = sS * (LAMP_W / LAMP_H) * 0.55, sH = sS * 0.98, dY = (canvas.height - sH) / 2 + sS * 0.06;
+            if (d > 0.2 && sX > -sW && sX < canvas.width + sW) {
+                let left = sX - sW / 2;
+                
+                // O BRILHO (GLOW) SÓ ACONTECE DE NOITE
+                if(isNight && gfxQuality !== 'low') {
+                    let gR = Math.max(10, sS * 0.9), gA = Math.max(0, 0.55 - d * 0.045);
+                    ctx.save(); ctx.globalCompositeOperation = 'lighter';
+                    let glow = ctx.createRadialGradient(sX, dY + sH * 0.14, 0, sX, dY + sH * 0.14, gR); glow.addColorStop(0, `rgba(255,205,110,${gA})`); glow.addColorStop(0.5, `rgba(255,160,60,${gA * 0.4})`); glow.addColorStop(1, 'rgba(255,160,60,0)');
+                    ctx.fillStyle = glow; ctx.beginPath(); ctx.arc(sX, dY + sH * 0.14, gR, 0, Math.PI * 2); ctx.fill();
+                    let pool = ctx.createRadialGradient(sX, dY + sH, 0, sX, dY + sH, gR * 0.85); pool.addColorStop(0, `rgba(255,190,100,${gA * 0.5})`); pool.addColorStop(1, 'rgba(255,190,100,0)');
+                    ctx.fillStyle = pool; ctx.beginPath(); ctx.ellipse(sX, dY + sH, gR * 0.9, gR * 0.28, 0, 0, Math.PI * 2); ctx.fill(); ctx.restore();
                 }
-            });
-        }
+
+                let cS = Math.max(1, Math.floor(sW / LAMP_W));
+                for (let x = 0; x < sW; x += cS) { let pX = Math.floor(left + x); if (pX >= 0 && pX < canvas.width && zBuff[pX] > d) ctx.drawImage(lampSprite, Math.floor((x / sW) * LAMP_W), 0, cS, LAMP_H, pX, dY, cS, sH); }
+            }
+        });
 
         enemies.map(e => ({ e, d: (e.x-player.x)**2 + (e.y-player.y)**2 })).sort((a,b) => b.d - a.d).forEach(item => {
             let e = item.e, d = Math.sqrt(item.d), ang = Math.atan2(e.y - player.y, e.x - player.x) - player.dir;
@@ -1432,11 +1437,6 @@
             if (d > 0.2 && sX > -sW && sX < canvas.width + sW) {
                 let left = sX - sW / 2, cS = Math.max(1, Math.floor(sW / SPR_W));
                 for (let x = 0; x < sW; x += cS) { let pX = Math.floor(left + x); if (pX >= 0 && pX < canvas.width && zBuff[pX] > d) ctx.drawImage(img, Math.floor((x / sW) * SPR_W), 0, cS, SPR_H, pX, dY, cS, sH); }
-                
-                if (d > 3 && gfxQuality !== 'low') { 
-                    let sOp = gfxQuality === 'ultra' ? Math.min(0.85, (d-2)/6) : Math.min(0.7, (d-3)/8);
-                    ctx.fillStyle = `rgba(5,5,5,${sOp})`; ctx.fillRect(left, dY, sW, sH); 
-                }
             }
         });
 
