@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>The Last Front: Saint-Lô, 1944.</title>
+    <title>The Last Front: Saint-Lô, 1944. (Battle Royale)</title>
     <style>
         /* RESET E TELA CHEIA GARANTIDA */
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -37,6 +37,11 @@
             pointer-events: none; z-index: 12; background: rgba(180,0,0,0.55);
             opacity: 0; transition: opacity 0.25s ease-out;
         }
+        #zone-flash {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none; z-index: 11; background: rgba(200, 0, 0, 0.25);
+            opacity: 0; transition: opacity 0.5s ease-out;
+        }
         #blood-screen {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             pointer-events: none; z-index: 11; opacity: 0;
@@ -65,151 +70,176 @@
             100% { opacity: 0.95; }
         }
 
+        /* --- NOTIFICAÇÃO DE DESBLOQUEIO --- */
+        #unlock-notification {
+            position: fixed; top: -100px; left: 50%; transform: translateX(-50%);
+            background: linear-gradient(to bottom, rgba(212,175,55,0.95), rgba(184,134,11,0.95));
+            color: #fff; padding: 15px 30px; font-family: 'Times New Roman', serif; font-weight: bold;
+            font-size: 1.2rem; border: 2px solid #ffd700; z-index: 99999; 
+            box-shadow: 0 0 20px rgba(212,175,55,0.8), inset 0 0 10px rgba(255,255,255,0.5);
+            text-shadow: 1px 1px 2px #000; letter-spacing: 2px;
+            transition: top 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            border-radius: 4px; pointer-events: none;
+        }
+
+        /* --- NOVO MENU ESTILO WW2 --- */
         #menu-wrapper {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             z-index: 30;
-            display: flex; flex-direction: column; align-items: center; justify-content: space-between;
+            display: flex; flex-direction: column; align-items: center; justify-content: flex-end;
             overflow: hidden;
-            background: linear-gradient(180deg, #000000 0%, #ef1900 40%, #2a2c3f 70%, #000000 100%);
+            background: #000 url('menu_screen.jpg') no-repeat center center;
+            background-size: cover;
         }
 
-        .cloud-layer {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1;
-            background: 
-                radial-gradient(circle at 20% 30%, rgba(255,255,255,0.03) 0%, transparent 40%),
-                radial-gradient(circle at 80% 60%, rgba(255,255,255,0.04) 0%, transparent 50%),
-                radial-gradient(circle at 50% 80%, rgba(255,255,255,0.02) 0%, transparent 60%);
-            filter: blur(20px);
-            animation: pulseClouds 10s infinite alternate;
+        /* EFEITO DE FUMAÇA ANIMADA */
+        .smoke-fx {
+            position: absolute; z-index: 1; pointer-events: none;
+            border-radius: 50%;
+            filter: blur(40px);
+            opacity: 0;
+            animation: smokeRise infinite alternate ease-in-out;
+        }
+        .s1 { width: 120%; height: 60%; bottom: -20%; left: -10%; background: radial-gradient(circle, rgba(60,50,40,0.3) 0%, transparent 60%); animation-duration: 12s; animation-delay: 0s; }
+        .s2 { width: 100%; height: 70%; bottom: -30%; right: -20%; background: radial-gradient(circle, rgba(40,40,40,0.4) 0%, transparent 65%); animation-duration: 16s; animation-delay: -4s; }
+        .s3 { width: 150%; height: 50%; bottom: -10%; left: -25%; background: radial-gradient(circle, rgba(100,50,20,0.15) 0%, transparent 70%); animation-duration: 20s; animation-delay: -8s; }
+
+        @keyframes smokeRise {
+            0% { transform: translateY(5%) scale(1); opacity: 0.2; }
+            50% { opacity: 0.5; }
+            100% { transform: translateY(-5%) scale(1.05); opacity: 0.3; }
         }
 
-        @keyframes pulseClouds {
-            0% { opacity: 0.7; transform: scale(1); }
-            100% { opacity: 1; transform: scale(1.05); }
-        }
-
-        .plane { position: absolute; z-index: 2; opacity: 0.6; animation: flyRight linear infinite; }
+        /* AVIÕES */
+        .plane { position: absolute; z-index: 2; opacity: 0.4; animation: flyRight linear infinite; }
         .plane svg { width: 80px; height: auto; fill: #111; filter: drop-shadow(0px 10px 5px rgba(0,0,0,0.5)); }
-        .p1 { top: 25%; animation-duration: 25s; animation-delay: 0s; transform: scale(1); }
-        .p2 { top: 35%; animation-duration: 35s; animation-delay: 5s; transform: scale(0.6); }
-        .p3 { top: 15%; animation-duration: 20s; animation-delay: 12s; transform: scale(0.8); }
+        .p1 { top: 20%; animation-duration: 28s; animation-delay: 0s; transform: scale(0.9); }
+        .p2 { top: 30%; animation-duration: 40s; animation-delay: 8s; transform: scale(0.5); }
+        .p3 { top: 12%; animation-duration: 22s; animation-delay: 15s; transform: scale(0.7); }
 
         @keyframes flyRight {
             0% { left: -10%; transform: translateX(0) scale(var(--s, 1)); opacity: 0; }
-            10% { opacity: 0.8; }
-            90% { opacity: 0.8; }
+            10% { opacity: 0.6; }
+            90% { opacity: 0.6; }
             100% { left: 110%; transform: translateX(0) scale(var(--s, 1)); opacity: 0; }
         }
 
-        .moh-title {
-            z-index: 10; margin-top: 12vh; text-align: center;
-            font-family: 'Times New Roman', Times, serif; color: #fff;
-            text-shadow: 0 4px 15px rgba(0,0,0,0.9), 0 0 30px rgba(138, 43, 226, 0.4);
-        }
-        .moh-title h1 { font-size: clamp(2.5rem, 6vw, 4.5rem); font-weight: normal; letter-spacing: 4px; margin: 0; }
-        .moh-title h2 { font-size: clamp(1rem, 3vw, 2rem); font-weight: normal; letter-spacing: 14px; margin: 0; margin-left: 14px; color: #ddd; }
-        .moh-line {
-            width: 80%; max-width: 500px; height: 2px;
-            background: linear-gradient(90deg, transparent, #000000de, transparent); margin: 20px auto; box-shadow: 0 0 10px #b30000;
+        /* NAVEGAÇÃO / BOTÕES */
+        #main-nav { 
+            z-index: 10; margin-bottom: 8vh; display: flex; gap: 4px; flex-wrap: wrap; justify-content: center; padding: 0 20px; 
         }
 
-        #main-nav { z-index: 10; margin-bottom: 8vh; display: flex; gap: 15px; flex-wrap: wrap; justify-content: center; padding: 0 20px; }
-
-        .glass-panel {
-            background: rgba(30, 20, 50, 0.35); backdrop-filter: blur(16px) saturate(140%); -webkit-backdrop-filter: blur(16px) saturate(140%);
-            border: 1px solid rgba(255, 255, 255, 0.1); border-top: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 20px; box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5); padding: 30px; color: #fff; text-align: center;
+        .ww2-panel {
+            background: rgba(12, 10, 8, 0.92); backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px);
+            border: 1px solid #3a3a3a; border-top: 1px solid #4a4a4a;
+            border-radius: 0px; box-shadow: 0 10px 40px rgba(0, 0, 0, 0.9); padding: 30px; color: #fff; text-align: center;
             z-index: 15; width: 90%; max-width: 500px; display: none; flex-direction: column; gap: 15px;
             position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
             max-height: 90vh; overflow-y: auto;
         }
 
-        .glass-btn {
-            background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); backdrop-filter: blur(4px);
-            color: #fff; padding: 15px 30px; border-radius: 12px; font-family: 'Segoe UI', sans-serif; font-weight: 600;
-            font-size: 1.1rem; text-transform: uppercase; letter-spacing: 2px; cursor: pointer; transition: all 0.3s ease; text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+        .ww2-btn {
+            background: rgba(15, 12, 10, 0.85); border: 1px solid rgba(255, 255, 255, 0.15);
+            color: #d0c8b8; padding: 16px 32px; border-radius: 0; font-family: 'Times New Roman', serif; font-weight: normal;
+            font-size: 1.1rem; text-transform: uppercase; letter-spacing: 2px; cursor: pointer; transition: all 0.2s ease; text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+            min-width: 170px;
         }
-        .glass-btn:hover, .glass-btn:active {
-            background: rgba(138, 43, 226, 0.5); border-color: rgba(138, 43, 226, 0.8);
-            transform: translateY(-2px); box-shadow: 0 4px 15px rgba(138, 43, 226, 0.4);
+        .ww2-btn:hover, .ww2-btn:active {
+            background: rgba(30, 10, 10, 0.9); border-color: #a02020;
+            color: #fff; box-shadow: inset 0 0 15px rgba(160, 32, 32, 0.4);
         }
-        .glass-btn.btn-play { background: rgba(0, 00, 10, 0.6); border-color: rgba(150, 20, 20, 0.5); }
-        .glass-btn.btn-danger { background: rgba(138, 40, 40, 0.8); border-color: rgba(138, 40, 40, 0.8); }
+        /* Botão Dourado (Customizar) */
+        .ww2-btn.btn-gold {
+            border-color: #b8860b; color: #ffd700;
+        }
+        .ww2-btn.btn-gold:hover, .ww2-btn.btn-gold:active {
+            background: rgba(40, 30, 10, 0.9); border-color: #ffd700; color: #fff;
+            box-shadow: inset 0 0 15px rgba(218, 165, 32, 0.5);
+        }
+        /* Botão para ações perigosas / destaque */
+        .ww2-btn.btn-danger { background: rgba(80, 15, 15, 0.9); border-color: #ff3333; color: #fff; }
+        .ww2-btn.btn-danger:hover { background: rgba(120, 20, 20, 0.9); box-shadow: 0 0 15px rgba(255, 50, 50, 0.5); }
 
         .gamepad-selected {
-            box-shadow: 0 0 15px 4px #8a2be2, inset 0 0 10px #8a2be2 !important;
-            border-color: #d8b4fe !important;
-            transform: scale(1.05);
+            box-shadow: 0 0 15px 2px #a02020, inset 0 0 10px #a02020 !important;
+            border-color: #ff4d4d !important;
+            transform: scale(1.02);
             transition: all 0.15s ease;
             outline: none;
         }
-        .mode-btn.gamepad-selected {
-            background-color: rgba(138, 43, 226, 0.5);
-            color: #fff;
-        }
-        input[type="range"].gamepad-selected {
-            box-shadow: 0 0 12px 2px #8a2be2;
-        }
-        input[type="range"].gamepad-selected::-webkit-slider-thumb {
-            box-shadow: 0 0 15px #d8b4fe;
-            background: #d8b4fe;
-        }
+        .mode-btn.gamepad-selected { background-color: rgba(160, 32, 32, 0.5); color: #fff; }
+        input[type="range"].gamepad-selected { box-shadow: 0 0 12px 2px #a02020; }
+        input[type="range"].gamepad-selected::-webkit-slider-thumb { box-shadow: 0 0 15px #ff4d4d; background: #ff4d4d; }
 
-        .glass-panel h3 { font-family: 'Times New Roman', serif; letter-spacing: 2px; margin-bottom: 10px; font-size: 1.5rem; text-transform: uppercase;}
+        .ww2-panel h3 { font-family: 'Times New Roman', serif; letter-spacing: 2px; margin-bottom: 10px; font-size: 1.5rem; text-transform: uppercase;}
         
         .sens-row, .mode-row { display: flex; flex-direction: column; align-items: center; width: 100%; margin-bottom: 10px;}
-        .glass-panel label { font-size: 0.85rem; color: #bbb; margin-bottom: 8px; letter-spacing: 1px; text-transform: uppercase; }
+        .ww2-panel label { font-size: 0.85rem; color: #bbb; margin-bottom: 8px; letter-spacing: 1px; text-transform: uppercase; }
         
         input[type="range"] {
-            width: 100%; accent-color: #8a2be2; cursor: pointer; background: rgba(0,0,0,0.3); height: 6px; border-radius: 3px; outline: none; -webkit-appearance: none;
+            width: 100%; accent-color: #a02020; cursor: pointer; background: rgba(0,0,0,0.6); height: 6px; border-radius: 0px; outline: none; -webkit-appearance: none; border: 1px solid #333;
         }
         input[type="range"]::-webkit-slider-thumb {
-            -webkit-appearance: none; appearance: none; width: 18px; height: 18px; border-radius: 50%;
-            background: #fff; box-shadow: 0 0 10px rgba(138,43,226,0.8); cursor: pointer;
+            -webkit-appearance: none; appearance: none; width: 16px; height: 16px; border-radius: 0;
+            background: #d0c8b8; border: 1px solid #fff; cursor: pointer;
         }
 
-        .mode-btns { display: flex; gap: 10px; width: 100%; justify-content: center;}
-        .mode-btn {
-            flex: 1; background-color: rgba(0,0,0,0.3); color: #aaa; border: 1px solid rgba(255,255,255,0.1);
-            padding: 10px; font-size: 0.95rem; font-weight: bold; border-radius: 8px; cursor: pointer; letter-spacing: 1px; transition: 0.3s;
+        /* Inputs de Cor Customizados */
+        input[type="color"] {
+            width: 80px; height: 40px; border: 2px solid rgba(255,255,255,0.2); 
+            background: none; cursor: pointer; padding: 2px;
         }
-        .mode-btn.active { background-color: rgba(138, 43, 226, 0.6); color: #fff; border-color: rgba(138, 43, 226, 1); }
+        input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; }
+        input[type="color"]::-webkit-color-swatch { border: none; }
+
+        .mode-btns { display: flex; gap: 5px; width: 100%; justify-content: center;}
+        .mode-btn {
+            flex: 1; background-color: rgba(0,0,0,0.5); color: #888; border: 1px solid rgba(255,255,255,0.1);
+            padding: 10px; font-size: 0.9rem; font-family: 'Times New Roman', serif; border-radius: 0px; cursor: pointer; letter-spacing: 1px; transition: 0.2s;
+        }
+        .mode-btn.active { background-color: rgba(80, 15, 15, 0.8); color: #fff; border-color: #a02020; box-shadow: inset 0 0 10px rgba(160, 32, 32, 0.5); }
 
         .overlay {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            display: flex; flex-direction: column; justify-content: center; align-items: center; background: rgba(10, 5, 20, 0.6); z-index: 30;
+            display: flex; flex-direction: column; justify-content: center; align-items: center; background: rgba(5, 5, 5, 0.8); z-index: 30;
         }
 
-        #gameover-screen {
-            opacity: 0;
-            transition: opacity 1.5s ease-in;
-            z-index: 40;
-        }
+        #gameover-screen { opacity: 0; transition: opacity 1.5s ease-in; z-index: 40; }
 
         #pause-btn {
-            position: absolute; top: calc(14px + env(safe-area-inset-top, 0px)); right: calc(14px + env(safe-area-inset-right, 0px)); z-index: 50;
+            position: absolute; top: calc(14px + env(safe-area-inset-top, 0px)); left: 50%; transform: translateX(-50%); z-index: 50;
             width: 42px; height: 42px; display: none; align-items: center; justify-content: center;
-            background: rgba(30, 20, 50, 0.5); backdrop-filter: blur(14px) saturate(140%); -webkit-backdrop-filter: blur(14px) saturate(140%);
-            border: 1px solid rgba(138, 43, 226, 0.4); border-radius: 50%; box-shadow: 0 2px 10px rgba(0,0,0,0.35);
-            color: #fff; font-size: 1.05rem; font-weight: bold; cursor: pointer; padding: 0;
+            background: rgba(20, 15, 15, 0.7); backdrop-filter: blur(4px);
+            border: 1px solid rgba(160, 32, 32, 0.6); border-radius: 0; box-shadow: 0 2px 10px rgba(0,0,0,0.5);
+            color: #d0c8b8; font-family: 'Times New Roman', serif; font-size: 1.1rem; cursor: pointer; padding: 0;
         }
-        #pause-btn:active { transform: scale(0.92); }
+        #pause-btn:active { transform: scale(0.92); background: rgba(80, 15, 15, 0.9); color: #fff; }
+
+        #minimap-container { position: absolute; top: calc(85px + env(safe-area-inset-top, 0px)); left: calc(14px + env(safe-area-inset-left, 0px)); z-index: 9; display: none; border: 2px solid rgba(255,255,255,0.2); border-radius: 0; overflow: hidden; background: rgba(0,0,0,0.6); box-shadow: 0 4px 10px rgba(0,0,0,0.8); }
+        #minimapCanvas { display: block; width: 150px; height: 150px; }
 
         #hud {
             position: absolute; top: calc(12px + env(safe-area-inset-top, 0px)); left: 0; width: 100%;
             display: flex; justify-content: space-between; align-items: flex-start;
             padding: 0 calc(14px + env(safe-area-inset-left, 0px)) 0 calc(14px + env(safe-area-inset-left, 0px));
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-            font-size: clamp(0.72rem, 2.6vw, 0.95rem); font-weight: 600; color: #fff;
+            font-family: 'Times New Roman', serif;
+            font-size: clamp(0.75rem, 2.6vw, 1rem); color: #d0c8b8; letter-spacing: 1px;
             z-index: 10; pointer-events: none; display: none; gap: 10px;
         }
         #hud .hud-block {
-            background: rgba(20, 10, 40, 0.4); backdrop-filter: blur(14px) saturate(140%); -webkit-backdrop-filter: blur(14px) saturate(140%);
-            border: 1px solid rgba(138, 43, 226, 0.3); border-radius: 14px; padding: 8px 14px; box-shadow: 0 4px 14px rgba(0,0,0,0.28);
+            background: rgba(10, 10, 10, 0.6); backdrop-filter: blur(4px);
+            border: 1px solid rgba(255,255,255,0.15); border-radius: 0; padding: 8px 14px; box-shadow: 0 4px 14px rgba(0,0,0,0.5);
         }
-        #hp-bar-wrap { width: clamp(80px,26vw,130px); height: 6px; background: rgba(255,255,255,0.15); border-radius: 4px; margin-top: 5px; overflow: hidden; }
-        #hp-bar { height: 100%; background: #fff; width: 100%; border-radius: 4px; transition: width 0.2s ease-out; }
-        #reload-msg { position: absolute; bottom: 30%; left: 50%; transform: translateX(-50%); color: #e8c96a; font-weight: bold; font-size: 1rem; text-shadow: 2px 2px #000; z-index: 10; display: none; letter-spacing: 2px; }
+        #hp-bar-wrap { width: clamp(80px,26vw,130px); height: 8px; background: rgba(0,0,0,0.8); border: 1px solid #333; margin-top: 5px; overflow: hidden; }
+        #hp-bar { height: 100%; background: #a02020; width: 100%; transition: width 0.2s ease-out; }
+        
+        .armor-icons { display: flex; gap: 5px; margin-top: 5px; }
+        .armor-icon { font-size: 0.8rem; color: #555; display: none; font-family: sans-serif;}
+        .armor-icon.active-vest { color: #8e9e75; text-shadow: 0 0 5px #8e9e75; display: inline;}
+        .armor-icon.active-helm { color: #a19a79; text-shadow: 0 0 5px #a19a79; display: inline;}
+
+        #reload-msg, #pickup-msg { position: absolute; bottom: 30%; left: 50%; transform: translateX(-50%); color: #e8c96a; font-family: 'Times New Roman', serif; font-weight: bold; font-size: 1rem; text-shadow: 2px 2px #000; z-index: 10; display: none; letter-spacing: 2px; }
+        #pickup-msg { color: #fff; font-size: 0.9rem; bottom: 35%; }
 
         #weapon-layer {
             position: absolute; bottom: -6%; left: 50%; 
@@ -227,55 +257,113 @@
         #camera-zone { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; pointer-events: auto; }
         #joystick-base {
             position: absolute; bottom: calc(34px + env(safe-area-inset-bottom, 0px)); left: calc(20px + env(safe-area-inset-left, 0px));
-            width: 118px; height: 118px; background: rgba(30, 20, 50, 0.2); backdrop-filter: blur(10px); border: 1px solid rgba(138, 43, 226, 0.3); border-radius: 50%; z-index: 2; pointer-events: auto;
+            width: 118px; height: 118px; background: rgba(20, 20, 20, 0.3); border: 2px solid rgba(100, 100, 100, 0.3); border-radius: 50%; z-index: 2; pointer-events: auto;
         }
-        #joystick-stick { position: absolute; top: 34px; left: 34px; width: 50px; height: 50px; background: rgba(255,255,255,0.75); border-radius: 50%; pointer-events: none; }
+        #joystick-stick { position: absolute; top: 34px; left: 34px; width: 50px; height: 50px; background: rgba(200,200,200,0.6); border-radius: 50%; pointer-events: none; }
         .action-area { position: absolute; bottom: calc(34px + env(safe-area-inset-bottom, 0px)); right: calc(20px + env(safe-area-inset-right, 0px)); display: flex; gap: 12px; align-items: flex-end; z-index: 2; pointer-events: auto; }
-        .ctrl-btn { border-radius: 50%; color: #fff; display: flex; justify-content: center; align-items: center; background: rgba(30, 20, 50, 0.4); backdrop-filter: blur(12px); border: 1px solid rgba(138, 43, 226, 0.4); }
-        #aim-btn { width: 58px; height: 58px; } #aim-btn.active { background: rgba(138, 43, 226, 0.5); }
-        #shoot-btn { width: 82px; height: 82px; } #reload-btn { width: 52px; height: 52px; align-self: center;} .ctrl-btn:active { transform: scale(0.92); }
+        .ctrl-btn { border-radius: 50%; color: #fff; display: flex; justify-content: center; align-items: center; background: rgba(30, 20, 20, 0.5); border: 1px solid rgba(160, 32, 32, 0.5); }
+        #aim-btn { width: 58px; height: 58px; } #aim-btn.active { background: rgba(160, 32, 32, 0.7); }
+        #shoot-btn { width: 82px; height: 82px; transition: opacity 0.2s;} #shoot-btn.disabled { opacity: 0.3; pointer-events: none; }
+        #reload-btn { width: 52px; height: 52px; align-self: center;} .ctrl-btn:active { transform: scale(0.92); }
 
-        .top-zone { position: absolute; top: 0; width: 42%; height: 34%; z-index: 2; pointer-events: auto; background: rgba(255,255,255,0.025); border: 1px solid rgba(255,255,255,0.10); }
+        .top-zone { position: absolute; top: 0; width: 42%; height: 34%; z-index: 2; pointer-events: auto; background: rgba(255,255,255,0.025); border: 1px solid rgba(255,255,255,0.05); }
         #aim-zone-top { left: 0; border-radius: 0 0 22px 0; } #shoot-zone-top { right: 0; border-radius: 0 0 0 22px; }
         .top-zone.active { background: rgba(255,255,255,0.07); }
-        .top-zone .zone-label { position: absolute; top: 10px; display: flex; align-items: center; gap: 5px; color: rgba(255,255,255,0.55); font-size: 0.6rem; pointer-events: none; }
+        .top-zone .zone-label { position: absolute; top: 10px; display: flex; align-items: center; gap: 5px; color: rgba(255,255,255,0.4); font-size: 0.6rem; pointer-events: none; font-family: sans-serif; }
         #aim-zone-top .zone-label { left: 12px; } #shoot-zone-top .zone-label { right: 12px; flex-direction: row-reverse; }
 
-        #pc-hint { position: absolute; bottom: 12px; left: 50%; transform: translateX(-50%); color: #aaa; font-size: 0.75rem; z-index: 10; display: none; text-align:center; }
+        #pc-hint { position: absolute; bottom: 12px; left: 50%; transform: translateX(-50%); color: #aaa; font-size: 0.75rem; z-index: 10; display: none; text-align:center; text-shadow: 1px 1px 2px #000; font-family: sans-serif; }
     </style>
 </head>
 <body>
 <audio id="menu-music" src="sua_musica.mp3" loop></audio>
 <audio id="gameplay-music" src="music_gameplay.mp3" loop></audio>
+<audio id="br-music" src="battleroyale_music.mp3" loop></audio>
 <audio id="gameover-music" src="gameover_music.mp3" loop></audio>
+<audio id="victory-music" src="victorybr_music.mp3" loop></audio>
+<audio id="sfx-unlock" src="unlock.mp3"></audio>
+
+    <div id="unlock-notification">MODO CUSTOMIZAÇÃO DESBLOQUEADO!</div>
 
     <div id="crt-overlay"></div>
 
     <div id="game-container">
         
         <div id="menu-wrapper">
-            <div class="cloud-layer"></div>
+            <!-- Fumaça para dar vida ao menu -->
+            <div class="smoke-fx s1"></div>
+            <div class="smoke-fx s2"></div>
+            <div class="smoke-fx s3"></div>
             
             <div class="plane p1" style="--s: 1;"><svg viewBox="0 0 100 100"><path d="M50 10 L60 40 L95 45 L95 55 L60 60 L55 90 L45 90 L40 60 L5 55 L5 45 L40 40 Z"/></svg></div>
             <div class="plane p2" style="--s: 0.6;"><svg viewBox="0 0 100 100"><path d="M50 10 L60 40 L95 45 L95 55 L60 60 L55 90 L45 90 L40 60 L5 55 L5 45 L40 40 Z"/></svg></div>
             <div class="plane p3" style="--s: 0.8;"><svg viewBox="0 0 100 100"><path d="M50 10 L60 40 L95 45 L95 55 L60 60 L55 90 L45 90 L40 60 L5 55 L5 45 L40 40 Z"/></svg></div>
-
-            <div class="moh-title">
-                <h1>THE LAST FRONT:</h1>
-                <div class="moh-line"></div>
-              <h2>Saint-Lô, 1944.</h2>
-              <br>
-              <h5>@LUKAMARKS</h5><br>
-            </div>
             
             <div id="main-nav">
-                <button class="glass-btn btn-play" onclick="startGame()">JOGAR</button>
-                <button class="glass-btn" onclick="openMenu('options-panel')">OPÇÕES</button>
-                <button class="glass-btn" onclick="openMenu('credits-panel')">CRÉDITOS</button>
+                <button class="ww2-btn" onclick="startGame('infinite')">MODO INFINITO</button>
+                <button class="ww2-btn" onclick="openMenu('br-setup-panel')">BATTLE ROYALE</button>
+                <button class="ww2-btn btn-gold" id="btn-custom" style="display: none;" onclick="openMenu('custom-panel')">CUSTOMIZAR</button>
+                <button class="ww2-btn" onclick="openMenu('options-panel')">OPÇÕES</button>
+                <button class="ww2-btn" onclick="openMenu('credits-panel')">CRÉDITOS</button>
             </div>
-            <div>
-            <H6>BETA</H6></div>
-            <div id="options-panel" class="glass-panel">
+            <div style="margin-bottom: 2vh; font-family: 'Times New Roman', serif; color: #888; letter-spacing: 2px;">
+                <H6>BETA</H6>
+            </div>
+
+            <!-- MENU CUSTOMIZAR -->
+            <div id="custom-panel" class="ww2-panel">
+                <h3 style="color: #bea201c0;">Customizar Tropa</h3>
+                <p style="font-size: 0.85rem; color: #aaa; margin-bottom: 10px;">Recompensa de Vitória Battle Royale</p>
+                
+                <div class="mode-row">
+                    <label>Cor da Pele</label>
+                    <input type="color" id="custom-skin" value="#d99c75" onchange="applyCustomColors()">
+                </div>
+                <div class="mode-row">
+                    <label>Cor do Uniforme</label>
+                    <input type="color" id="custom-clothes" value="#4b5320" onchange="applyCustomColors()">
+                </div>
+                <div class="mode-row">
+                    <label>Cor da Arma</label>
+                    <input type="color" id="custom-weapon" value="#5c3a21" onchange="applyCustomColors()">
+                </div>
+
+                <button class="ww2-btn" style="margin-top: 10px;" onclick="openMenu('main-nav')">VOLTAR</button>
+            </div>
+
+            <!-- SETUP BR -->
+            <div id="br-setup-panel" class="ww2-panel">
+                <h3>Configurar Battle Royale</h3>
+                
+                <div class="mode-row">
+                    <label>Jogadores Totais</label>
+                    <div class="mode-btns">
+                        <button type="button" class="mode-btn" id="br-p30" onclick="setBRPlayers(30)">30</button>
+                        <button type="button" class="mode-btn active" id="br-p50" onclick="setBRPlayers(50)">50</button>
+                    </div>
+                </div>
+
+                <div class="mode-row">
+                    <label>Duração da Partida</label>
+                    <div class="mode-btns">
+                        <button type="button" class="mode-btn active" id="br-t5" onclick="setBRTime(5)">5 MIN</button>
+                        <button type="button" class="mode-btn" id="br-t10" onclick="setBRTime(10)">10 MIN</button>
+                    </div>
+                </div>
+
+                <div class="mode-row">
+                    <label>Mapa / Clima</label>
+                    <div class="mode-btns">
+                        <button type="button" class="mode-btn active" id="br-day" onclick="setBRMap('day')">☀ DIA</button>
+                        <button type="button" class="mode-btn" id="br-night" onclick="setBRMap('night')">☾ NOITE</button>
+                    </div>
+                </div>
+
+                <button class="ww2-btn" style="margin-top: 10px;" onclick="startGame('br')">INICIAR PARTIDA</button>
+                <button class="ww2-btn" style="margin-top: 5px; font-size: 0.9rem;" onclick="openMenu('main-nav')">VOLTAR</button>
+            </div>
+
+            <div id="options-panel" class="ww2-panel">
                 <h3>Opções de Jogo</h3>
                 
                 <div class="mode-row">
@@ -296,7 +384,7 @@
                 </div>
 
                 <div class="mode-row">
-                    <label>Horário do Combate</label>
+                    <label>Horário (Modo Infinito)</label>
                     <div class="mode-btns">
                         <button type="button" class="mode-btn active" id="mode-day-btn">☀ DIA</button>
                         <button type="button" class="mode-btn" id="mode-night-btn">☾ NOITE</button>
@@ -324,40 +412,41 @@
                     </div>
                 </div>
 
-                <button class="glass-btn" style="margin-top: 10px;" onclick="openMenu('main-nav')">VOLTAR</button>
+                <button class="ww2-btn" style="margin-top: 10px;" onclick="openMenu('main-nav')">VOLTAR</button>
             </div>
 
-            <div id="credits-panel" class="glass-panel">
+            <div id="credits-panel" class="ww2-panel">
                 <h3>Créditos</h3>
-                <p style="color: #ccc; line-height: 1.6;">
+                <p style="color: #ccc; line-height: 1.6; font-family: sans-serif; font-size: 0.95rem;">
                     <strong>Desenvolvedor:</strong> @lukamarks<br>
-                    <strong>Versão:</strong> 0.3.1 <br><br>
+                    <strong>Versão:</strong> 0.5.0 <br><br>
                   
-                  <h4>Vozes:</h4>
-                  <span style="font-size: 0.9em;"><strong>Rádio 1: </strong>Lucas Marques</span>
-                    <span style="font-size: 0.9em;"><strong>Rádio 2: </strong>Welber Marques</span>
-                  <span style="font-size: 0.9em;"><strong>Soldado: </strong>Lucas Gabriel</span
+                  <span style="font-family: 'Times New Roman', serif; font-size: 1.1rem; color: #fff;">Vozes:</span><br>
+                  <span style="font-size: 0.9em;"><strong>Rádio 1: </strong>Lucas Marques</span><br>
+                    <span style="font-size: 0.9em;"><strong>Rádio 2: </strong>Welber Marques</span><br>
+                  <span style="font-size: 0.9em;"><strong>Soldado: </strong>Lucas Gabriel</span>
                 </p>
-                <button class="glass-btn" style="margin-top: 10px;" onclick="openMenu('main-nav')">VOLTAR</button>
+                <button class="ww2-btn" style="margin-top: 10px;" onclick="openMenu('main-nav')">VOLTAR</button>
             </div>
         </div>
 
         <div id="gameover-screen" class="overlay" style="display: none;">
-            <div class="glass-panel" style="display: flex; border-color: rgba(255, 3, 3, 0.526);">
-                <h1 style="color: #fdfcfc; font-family: 'Times New Roman', serif; margin-bottom: 0;">FIM DE JOGO</h1>
-                <div class="moh-line" style="width: 100%; margin: 10px 0;"></div>
-                <div style="display:flex; justify-content: space-around; width: 100%; margin-bottom: 20px; font-size: 1.1rem;">
+            <div class="ww2-panel" id="gameover-panel" style="display: flex; border-color: #a02020;">
+                <h1 id="gameover-title" style="color: #fdfcfc; font-family: 'Times New Roman', serif; margin-bottom: 0;">FIM DE JOGO</h1>
+                <div style="width: 100%; height: 1px; background: #444; margin: 15px 0;"></div>
+                <div style="display:flex; justify-content: space-around; width: 100%; margin-bottom: 20px; font-size: 1.1rem; flex-wrap: wrap; gap:10px;">
                     <div>TEMPO: <strong id="final-time" style="color:#e8c96a;">0</strong>s</div>
                     <div>ABATES: <strong id="final-kills" style="color:#e8c96a;">0</strong></div>
+                    <div id="br-placement-div" style="display:none; width:100%;">POSIÇÃO: <strong id="final-placement" style="color:#8e9e75;">#1</strong></div>
                 </div>
-                <button class="glass-btn btn-danger" id="restart-btn">TENTAR NOVAMENTE</button>
-                <button class="glass-btn" id="gameover-menu-btn">VOLTAR AO MENU</button>
+                <button class="ww2-btn btn-danger" id="restart-btn">TENTAR NOVAMENTE</button>
+                <button class="ww2-btn" id="gameover-menu-btn" style="margin-top: 5px;">VOLTAR AO MENU</button>
             </div>
         </div>
 
         <div id="pause-screen" class="overlay" style="display: none;">
-            <div class="glass-panel" style="display: flex;">
-                <h1 style="font-family: 'Times New Roman', serif; margin-bottom: 5px;">PAUSADO</h1>
+            <div class="ww2-panel" style="display: flex;">
+                <h1 style="font-family: 'Times New Roman', serif; margin-bottom: 5px; color: #d0c8b8;">PAUSADO</h1>
                 
                 <div class="mode-row" style="margin-bottom: 5px;">
                     <label>Qualidade</label>
@@ -395,25 +484,38 @@
                         <button type="button" class="mode-btn" id="pause-controls-top-btn">4 DEDOS</button>
                     </div>
                 </div>
-                <button class="glass-btn btn-play" id="resume-btn" style="margin-top: 5px;">CONTINUAR</button>
-                <button class="glass-btn" id="pause-menu-btn">SAIR</button>
+                <button class="ww2-btn" id="resume-btn" style="margin-top: 15px;">CONTINUAR</button>
+                <button class="ww2-btn" id="pause-menu-btn" style="margin-top: 5px;">SAIR</button>
             </div>
         </div>
 
         <button id="pause-btn" title="Pausar">||</button>
 
+        <div id="minimap-container"><canvas id="minimapCanvas" width="150" height="150"></canvas></div>
+
         <div id="hud">
             <div class="hud-block">
                 HP: <span id="hp-val">100</span>%
+                <div class="armor-icons">
+                    <span id="vest-icon" class="armor-icon">Colete</span>
+                    <span id="helm-icon" class="armor-icon">Capacete</span>
+                </div>
                 <div id="hp-bar-wrap"><div id="hp-bar"></div></div>
             </div>
             <div class="hud-block" style="text-align:right;">
-                TEMPO: <span id="time-val">0</span>s<br>
-                ABATES: <span id="kills-val">0</span> &nbsp;|&nbsp; MUN: <span id="ammo-val">30</span>/<span id="ammo-max">30</span>
+                <span id="hud-time">TEMPO: <span id="time-val">0</span>s<br></span>
+                <span id="hud-br" style="display:none; color:#fff;">
+                    VIVOS: <strong id="alive-val" style="color:#d0c8b8;">50</strong><br>
+                    <div id="br-timer-container" style="background: rgba(0,0,0,0.7); padding: 4px 8px; border-radius: 0px; margin-top: 4px; border: 1px solid rgba(160,32,32,0.6); text-align:center;">
+                        <div id="br-timer-label" style="font-size: 0.65rem; color: #d0c8b8; font-family: sans-serif;">PRÓXIMA ZONA</div>
+                        <div id="br-timer-time" style="font-size: 1.1rem; color: #fff; font-weight: bold;">00:00</div>
+                    </div>
+                </span>
+                <span id="hud-infinite-stats">ABATES: <span id="kills-val">0</span> &nbsp;|&nbsp; </span>MUN: <span id="ammo-val">30</span>/<span id="ammo-max">30</span>
             </div>
         </div>
         <div id="reload-msg"></div>
-        <div id="pc-hint">WASD mover · Mouse atira · R recarregar<br>🎮 Suporte a Controle</div>
+        <div id="pickup-msg">ITEM PEGO</div>
 
         <!-- Arma Canvas -->
         <canvas id="weapon-layer" width="200" height="200"></canvas>
@@ -432,6 +534,7 @@
 
         <canvas id="gameCanvas"></canvas>
         <div id="vignette"></div>
+        <div id="zone-flash"></div>
         <div id="blood-screen">
             <svg viewBox="0 0 100 100" preserveAspectRatio="none">
                 <g fill="#5c0000" opacity="0.9">
@@ -446,12 +549,64 @@
             </svg>
         </div>
         <div id="damage-flash"></div>
+        <div id="pc-hint">WASD = mover · SWIFT = mora · Mouse = atira · R = recarregar<br>🎮 Suporte a Controle</div>
     </div>
 
 <script>
     let crtEnabled = true; 
     let gfxQuality = 'medium'; 
     let menuFocusIndex = 0; 
+    
+    // --- GLOBAIS BATTLE ROYALE ---
+    let gameType = 'infinite'; 
+    let gameMode = 'day'; 
+    
+    let brSettings = { players: 50, durationMin: 5 };
+    let brState = { totalAlive: 50, safeZone: { x:0, y:0, radius: 100 }, startRadius: 100, targetRadius: 10, phase: 'WAITING', phaseTimer: 0, currentPhase: 1, maxPhases: 4, waitTime: 30, shrinkTime: 30 };
+    let lootOnMap = [];
+
+    // --- VARIÁVEIS DE CUSTOMIZAÇÃO ---
+    let isCustomUnlocked = false;
+    let customColors = { skin: '#d99c75', clothes: '#4b5320', weapon: '#5c3a21' };
+
+    // Função utilitária para clarear e escurecer cores Hex hexadecimais automaticamente (Sombramento dinâmico 3D)
+    function shadeHex(color, percent) {
+        let f = parseInt(color.slice(1), 16),
+            t = percent < 0 ? 0 : 255,
+            p = percent < 0 ? percent * -1 : percent,
+            R = f >> 16,
+            G = f >> 8 & 0x00FF,
+            B = f & 0x0000FF;
+        return "#" + (0x1000000 + (Math.round((t - R) * p) + R) * 0x10000 + (Math.round((t - G) * p) + G) * 0x100 + (Math.round((t - B) * p) + B)).toString(16).slice(1);
+    }
+
+    function unlockCustomMode() {
+        if (isCustomUnlocked) return;
+        isCustomUnlocked = true;
+        
+        const unlockAudio = document.getElementById('sfx-unlock');
+        if (unlockAudio) unlockAudio.play().catch(e => {});
+
+        document.getElementById('btn-custom').style.display = 'block';
+
+        const notif = document.getElementById('unlock-notification');
+        notif.style.top = '20px'; 
+        setTimeout(() => { notif.style.top = '-100px'; }, 4000); 
+    }
+
+    function applyCustomColors() {
+        customColors.skin = document.getElementById('custom-skin').value;
+        customColors.clothes = document.getElementById('custom-clothes').value;
+        customColors.weapon = document.getElementById('custom-weapon').value;
+        
+        // Apenas forçamos a atualização da arma em 1ª Pessoa, sem mexer mais no Sprite dos inimigos!
+        lastFiringState = null;
+        updateWeaponCanvas();
+    }
+
+    function setBRPlayers(num) { brSettings.players = num; document.getElementById('br-p30').classList.toggle('active', num===30); document.getElementById('br-p50').classList.toggle('active', num===50); }
+    function setBRTime(mins) { brSettings.durationMin = mins; document.getElementById('br-t5').classList.toggle('active', mins===5); document.getElementById('br-t10').classList.toggle('active', mins===10); }
+    function setBRMap(mode) { gameMode = mode; document.getElementById('br-day').classList.toggle('active', mode==='day'); document.getElementById('br-night').classList.toggle('active', mode==='night'); }
 
     function toggleCRT(state) {
         crtEnabled = state;
@@ -483,6 +638,8 @@
         document.getElementById('main-nav').style.display = 'none';
         document.getElementById('options-panel').style.display = 'none';
         document.getElementById('credits-panel').style.display = 'none';
+        document.getElementById('br-setup-panel').style.display = 'none';
+        document.getElementById('custom-panel').style.display = 'none';
         
         menuFocusIndex = 0; 
 
@@ -504,7 +661,9 @@
 
     const menuMusic = document.getElementById('menu-music');
     const gameplayMusic = document.getElementById('gameplay-music');
+    const brMusic = document.getElementById('br-music');
     const gameoverMusic = document.getElementById('gameover-music');
+    const victoryMusic = document.getElementById('victory-music');
     let gameplayMusicEnabled = true;
 
     function toggleGameplayMusic(state) {
@@ -513,31 +672,21 @@
         document.getElementById('music-off-main').classList.toggle('active', !state);
         document.getElementById('music-on-pause').classList.toggle('active', state);
         document.getElementById('music-off-pause').classList.toggle('active', !state);
-
-        if (!state) {
-            gameplayMusic.pause();
-        } else if (gameState === 'PLAYING') {
-            gameplayMusic.play().catch(e => console.log("Aguardando interação."));
+        if (!state) { gameplayMusic.pause(); brMusic.pause(); }
+        else if (gameState === 'PLAYING') {
+            if (gameType === 'br') brMusic.play().catch(e => {});
+            else gameplayMusic.play().catch(e => {});
         }
     }
 
-    function playGameplayMusic() {
-        if (gameplayMusicEnabled && gameState === 'PLAYING') {
-            gameplayMusic.currentTime = 0;
-            gameplayMusic.play().catch(e => console.log("Aguardando interação."));
-        }
+    function playGameplayMusic() { 
+        if (gameplayMusicEnabled && gameState === 'PLAYING') { 
+            if (gameType === 'br') { brMusic.currentTime = 0; brMusic.play().catch(e => {}); }
+            else { gameplayMusic.currentTime = 0; gameplayMusic.play().catch(e => {}); }
+        } 
     }
-
-    function resetGameplayMusic() {
-        gameplayMusic.pause();
-        gameplayMusic.currentTime = 0;
-    }
-
-    function playMenuMusic() {
-        if (gameState === 'MENU') {
-            menuMusic.play().catch(erro => console.log("Aguardando interação."));
-        }
-    }
+    function resetGameplayMusic() { gameplayMusic.pause(); gameplayMusic.currentTime = 0; brMusic.pause(); brMusic.currentTime = 0; }
+    function playMenuMusic() { if (gameState === 'MENU') { menuMusic.play().catch(e => {}); } }
     function stopMenuMusic() { menuMusic.pause(); menuMusic.currentTime = 0; }
     
     const checkInteraction = () => { if (gameState === 'MENU' && menuMusic.paused) playMenuMusic(); };
@@ -546,17 +695,17 @@
 
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d', { alpha: false }); 
+    const minimapCanvas = document.getElementById('minimapCanvas'); 
+    const mmCtx = minimapCanvas.getContext('2d');
 
     function resizeCanvas() {
         let w = window.innerWidth; let h = window.innerHeight;
         let maxSize = 320; 
-        
         if (gfxQuality === 'low') maxSize = 200; 
         if (gfxQuality === 'ultra') maxSize = 480; 
 
         if (w > h) { canvas.width = maxSize; canvas.height = Math.floor(maxSize * (h / w)); } 
         else { canvas.height = maxSize; canvas.width = Math.floor(maxSize * (w / h)); }
-        
         syncFloorCanvasSize(); 
     }
     window.addEventListener('resize', resizeCanvas); 
@@ -568,6 +717,7 @@
         document.getElementById('control-mode-row-pause').style.display = 'flex';
     }
 
+    // --- GERADOR DE TEXTURAS ORIGINAIS ---
     const TEX_SIZE = 48;
     function makeTexCanvas() {
         let c = document.createElement('canvas'); c.width = TEX_SIZE; c.height = TEX_SIZE; return c;
@@ -687,6 +837,7 @@
     
     resizeCanvas(); 
 
+    // --- SPRITES ORIGINAIS ---
     const NUM_STARS = 45;
     const starField = Array.from({ length: NUM_STARS }, () => ({ x: Math.random(), y: Math.random() * 0.78, r: 0.4 + Math.random() * 0.9, a: 0.3 + Math.random() * 0.6 }));
     const LAMP_W = 26, LAMP_H = 120;
@@ -711,23 +862,29 @@
     const lampSprite = makeLampSprite();
 
     const SPR_W = 56, SPR_H = 110;
+    // Função REVERTIDA para não usar cores customizadas nos inimigos (Eles ficam sempre com as cores originais Padrão!)
     function drawSoldierSprite(t, tint) {
         t.clearRect(0, 0, SPR_W, SPR_H); const cx = SPR_W / 2;
+        
         t.fillStyle = 'rgba(0,0,0,0.35)'; t.beginPath(); t.ellipse(cx, SPR_H - 4, 16, 5, 0, 0, Math.PI*2); t.fill();
-        t.fillStyle = '#3c3a2e'; t.fillRect(cx - 12, 66, 10, 34); t.fillRect(cx + 2, 66, 10, 34);
+        t.fillStyle = '#3c3a2e'; t.fillRect(cx - 12, 66, 10, 34); t.fillRect(cx + 2, 66, 10, 34); // boots
         t.fillStyle = '#1a1611'; t.fillRect(cx - 13, 96, 12, 10); t.fillRect(cx + 1, 96, 12, 10);
-        t.fillStyle = '#4b5320'; t.fillRect(cx - 16, 34, 32, 36);
+        
+        t.fillStyle = '#4b5320'; t.fillRect(cx - 16, 34, 32, 36); // body
         t.fillStyle = 'rgba(0,0,0,0.18)'; t.fillRect(cx - 16, 34, 8, 36); t.fillRect(cx + 8, 34, 8, 36);
-        t.fillStyle = '#2b2318'; t.fillRect(cx - 16, 58, 32, 5); t.fillStyle = '#5a5a5a'; t.fillRect(cx - 3, 58, 6, 5);
+        t.fillStyle = '#2b2318'; t.fillRect(cx - 16, 58, 32, 5); t.fillStyle = '#5a5a5a'; t.fillRect(cx - 3, 58, 6, 5); // belt
         t.fillStyle = '#39331f'; t.fillRect(cx - 15, 62, 9, 8); t.fillRect(cx + 6, 62, 9, 8);
-        t.fillStyle = '#42481d'; t.fillRect(cx - 20, 38, 7, 26); t.fillRect(cx + 13, 38, 7, 26);
+        t.fillStyle = '#42481d'; t.fillRect(cx - 20, 38, 7, 26); t.fillRect(cx + 13, 38, 7, 26); // arms
+        
         t.save(); t.translate(cx + 6, 40); t.rotate(-0.55);
-        t.fillStyle = '#5c4530'; t.fillRect(-3, -6, 6, 58); t.fillStyle = '#1c1c1c'; t.fillRect(-2, -34, 4, 30); t.restore();
-        t.fillStyle = '#d2a679'; t.fillRect(cx - 5, 24, 10, 10); t.beginPath(); t.ellipse(cx, 20, 8, 9, 0, 0, Math.PI*2); t.fill();
-        t.fillStyle = '#4a5324'; t.beginPath(); t.ellipse(cx, 13, 11, 9, 0, Math.PI, Math.PI*2); t.fill();
+        t.fillStyle = '#5c4530'; t.fillRect(-3, -6, 6, 58); t.fillStyle = '#1c1c1c'; t.fillRect(-2, -34, 4, 30); t.restore(); // gun
+        
+        t.fillStyle = '#d2a679'; t.fillRect(cx - 5, 24, 10, 10); t.beginPath(); t.ellipse(cx, 20, 8, 9, 0, 0, Math.PI*2); t.fill(); // skin
+        t.fillStyle = '#4a5324'; t.beginPath(); t.ellipse(cx, 13, 11, 9, 0, Math.PI, Math.PI*2); t.fill(); // helmet
         t.fillRect(cx - 11, 13, 22, 3); t.beginPath(); t.ellipse(cx, 16, 12, 4, 0, 0, Math.PI); t.fill();
         t.strokeStyle = '#2a2a1a'; t.lineWidth = 1; t.beginPath(); t.moveTo(cx-9,16); t.lineTo(cx-5,26); t.stroke();
         t.beginPath(); t.moveTo(cx+9,16); t.lineTo(cx+5,26); t.stroke();
+
         if (tint) { t.globalCompositeOperation = 'source-atop'; t.fillStyle = tint; t.fillRect(0, 0, SPR_W, SPR_H); t.globalCompositeOperation = 'source-over'; }
     }
     const soldierCanvas = document.createElement('canvas'); soldierCanvas.width = SPR_W; soldierCanvas.height = SPR_H; drawSoldierSprite(soldierCanvas.getContext('2d'), null);
@@ -735,6 +892,21 @@
     const soldierDownCanvas = document.createElement('canvas'); soldierDownCanvas.width = SPR_W; soldierDownCanvas.height = SPR_H;
     (function(){ let t = soldierDownCanvas.getContext('2d'); t.save(); t.translate(SPR_W/2, SPR_H - 18); t.rotate(Math.PI/2); t.translate(-SPR_W/2, -(SPR_H - 55)); t.drawImage(soldierCanvas, 0, 0); t.restore(); })();
 
+    // --- SPRITES DE LOOT (BR) ---
+    const LOOT_S = 40;
+    function createLootSprite(type) {
+        let c = document.createElement('canvas'); c.width = LOOT_S; c.height = LOOT_S; let t = c.getContext('2d');
+        t.translate(LOOT_S/2, LOOT_S - 5); 
+        if(type==='weapon') { t.fillStyle='#333'; t.fillRect(-15,-8,30,8); t.fillStyle='#5c3a21'; t.fillRect(-10,-8,8,5); }
+        else if(type==='ammo') { t.fillStyle='#4b5320'; t.fillRect(-10,-15,20,15); t.fillStyle='#d4af37'; t.fillRect(-6,-10,4,4); t.fillRect(2,-10,4,4); }
+        else if(type==='medkit') { t.fillStyle='#eee'; t.fillRect(-12,-16,24,16); t.fillStyle='#c00'; t.fillRect(-3,-14,6,12); t.fillRect(-6,-11,12,6); }
+        else if(type==='vest') { t.fillStyle='#111'; t.fillRect(-10,-20,20,20); t.fillStyle='#333'; t.fillRect(-8,-18,16,8); }
+        else if(type==='helmet') { t.fillStyle='#3c421b'; t.beginPath(); t.arc(0, -8, 12, Math.PI, 0); t.fill(); }
+        return c;
+    }
+    const lootSprites = { weapon: createLootSprite('weapon'), ammo: createLootSprite('ammo'), medkit: createLootSprite('medkit'), vest: createLootSprite('vest'), helmet: createLootSprite('helmet') };
+
+    // --- AUDIO ---
     let audioCtx = null;
     function ensureAudio() {
         if (!audioCtx) { try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e) {} }
@@ -765,6 +937,7 @@
         ng.gain.setValueAtTime(0.16, t0); ng.gain.exponentialRampToValueAtTime(0.001, t0 + dur);
         noise.connect(nf); nf.connect(ng); ng.connect(audioCtx.destination); noise.start(t0); noise.stop(t0 + dur);
     }
+
     let ambienceNoise = null; let ambienceTimers = [];
     function startAmbience() {
         if (!audioCtx) return; stopAmbience();
@@ -811,10 +984,11 @@
         ambienceTimers.push(setTimeout(scheduleDistantGunfire, 1600 + Math.random() * 3200));
     }
 
+    // --- PLAYER ---
     let player = {
-        x: 1.5, y: 1.5, dir: 0, hp: 100, fov: Math.PI / 3, isAiming: false, moveFwd: 0, moveStr: 0,
-        gpFwd: 0, gpStr: 0,
-        ammo: 30, maxAmmo: 30, reloading: false, reloadTimer: 0, shootCd: 0, shakeTimer: 0, firing: false, lastDamageTime: 0
+        x: 1.5, y: 1.5, dir: 0, hp: 100, fov: Math.PI / 3, isAiming: false, moveFwd: 0, moveStr: 0, gpFwd: 0, gpStr: 0,
+        ammo: 30, maxAmmo: 30, reloading: false, reloadTimer: 0, shootCd: 0, shakeTimer: 0, firing: false, lastDamageTime: 0,
+        hasWeapon: true, vest: false, helmet: false
     };
     const FIRE_RATE = 0.1, REGEN_DELAY = 4000, REGEN_RATE = 9;
 
@@ -827,7 +1001,7 @@
     document.getElementById('sens-slider').addEventListener('input', (e) => setSensitivity(e.target.value));
     document.getElementById('pause-sens-slider').addEventListener('input', (e) => setSensitivity(e.target.value));
 
-    let gameMode = 'day';
+    // MODO CONTROLES
     document.getElementById('mode-day-btn').addEventListener('click', (e) => { gameMode = 'day'; e.target.classList.add('active'); document.getElementById('mode-night-btn').classList.remove('active'); });
     document.getElementById('mode-night-btn').addEventListener('click', (e) => { gameMode = 'night'; e.target.classList.add('active'); document.getElementById('mode-day-btn').classList.remove('active'); });
 
@@ -853,6 +1027,7 @@
     document.getElementById('pause-controls-standard-btn').addEventListener('click', () => setControlMode('standard'));
     document.getElementById('pause-controls-top-btn').addEventListener('click', () => setControlMode('top'));
 
+    // --- MAPA ---
     const CITY_SIZE = 65, BLOCK = 4, STREET = 3, UNIT = BLOCK + STREET, PLAZA_RADIUS = 5;
     function generateCityMap(size) {
         let m = []; const center = Math.floor(size / 2);
@@ -884,16 +1059,26 @@
     const lampPosts = computeLampPosts(); const PLAYER_START_X = BLOCK + 0.5, PLAYER_START_Y = BLOCK + 0.5;
     let enemies = [], spawnTimer = 0;
 
+    function getRandomFloorPos() {
+        let x, y;
+        do { x = Math.floor(Math.random() * (mapW - 2)) + 1; y = Math.floor(Math.random() * (mapH - 2)) + 1; }
+        while (map[y][x] > 0);
+        return { x: x + 0.5, y: y + 0.5 };
+    }
+
     function hasLineOfSight(x0, y0, x1, y1) {
         let dx = x1 - x0, dy = y1 - y0, dist = Math.sqrt(dx*dx + dy*dy), steps = Math.ceil(dist / 0.15);
         for (let i = 1; i < steps; i++) if (map[Math.floor(y0 + (dy * i) / steps)] && map[Math.floor(y0 + (dy * i) / steps)][Math.floor(x0 + (dx * i) / steps)] > 0) return false;
         return true;
     }
-    function spawnEnemy() {
-        let ex, ey; do { ex = Math.floor(Math.random() * (mapW - 2)) + 1; ey = Math.floor(Math.random() * (mapH - 2)) + 1;
-        } while (map[ey][ex] > 0 || (Math.abs(ex - player.x) < 2 && Math.abs(ey - player.y) < 2));
-        enemies.push({ x: ex + 0.5, y: ey + 0.5, hp: 30, maxHp: 30, hitTimer: 0, shootCd: 1 + Math.random() * 1.5, dying: false, dieTimer: 0 });
+
+    function spawnEnemy(forcePos = null) {
+        let pos = forcePos || getRandomFloorPos();
+        let hpBase = gameType === 'br' ? (Math.random() > 0.5 ? 100 : 50) : 30;
+        let hasWep = gameType === 'br' ? (Math.random() > 0.3) : true;
+        enemies.push({ x: pos.x, y: pos.y, hp: hpBase, maxHp: hpBase, hitTimer: 0, shootCd: 1 + Math.random() * 1.5, dying: false, dieTimer: 0, hasWeapon: hasWep });
     }
+
     function spawnBlood(sx, sy, big) {
         let count = big ? 22 : 9;
         for (let i = 0; i < count; i++) {
@@ -905,56 +1090,89 @@
             });
         }
     }
-    
-    let gpButtonsLast = [];
-    let gpNavCooldown = 0;
-    let isGamepadConnected = false;
+
+    function generateBRLoot() {
+        lootOnMap = [];
+        let items = ['weapon','weapon','weapon','weapon','ammo','ammo','ammo','ammo','ammo','medkit','medkit','medkit','vest','vest','helmet','helmet'];
+        for(let i=0; i<180; i++) {
+            let pos = getRandomFloorPos();
+            let type = items[Math.floor(Math.random()*items.length)];
+            lootOnMap.push({ x: pos.x, y: pos.y, type: type, active: true });
+        }
+    }
+
+    function showPickupMsg(text) {
+        let msg = document.getElementById('pickup-msg'); msg.innerText = text; msg.style.display = 'block';
+        setTimeout(() => { msg.style.display = 'none'; }, 2000);
+    }
+
+    function checkLootPickup() {
+        if(gameType !== 'br' || player.hp <= 0) return;
+        for(let i=0; i<lootOnMap.length; i++) {
+            let l = lootOnMap[i];
+            if(l.active) {
+                let dx = player.x - l.x, dy = player.y - l.y, dist = dx*dx + dy*dy;
+                if(dist < 0.8) { 
+                    let picked = false;
+                    if(l.type === 'weapon' && !player.hasWeapon) { player.hasWeapon = true; player.ammo = 30; picked = true; document.getElementById('weapon-layer').style.display='block'; showPickupMsg('METRALHADORA EQUIPADA'); document.getElementById('shoot-btn').classList.remove('disabled'); updateWeaponCanvas(); }
+                    else if(l.type === 'ammo' && player.hasWeapon) { player.ammo = Math.min(player.maxAmmo, player.ammo + 30); picked = true; showPickupMsg('+ MUNIÇÃO'); }
+                    else if(l.type === 'medkit' && player.hp < 100) { player.hp = Math.min(100, player.hp + 50); picked = true; showPickupMsg('+ VIDA'); }
+                    else if(l.type === 'vest' && !player.vest) { player.vest = true; picked = true; document.getElementById('vest-icon').classList.add('active-vest'); showPickupMsg('COLETE EQUIPADO'); }
+                    else if(l.type === 'helmet' && !player.helmet) { player.helmet = true; picked = true; document.getElementById('helm-icon').classList.add('active-helm'); showPickupMsg('CAPACETE EQUIPADO'); }
+                    
+                    if(picked) { 
+                        l.active = false; 
+                    }
+                }
+            }
+        }
+    }
+
+    // --- GAMEPAD E CHEAT CODES ---
+    let gpButtonsLast = []; let gpNavCooldown = 0; let isGamepadConnected = false;
+    const cheatSequence = [1, 0, 12, 15, 13, 14, 12]; // B, A, Up, Right, Down, Left, Up
+    let gpCheatIndex = 0;
 
     function updateGamepad(dt) {
-        const gps = navigator.getGamepads ? navigator.getGamepads() : [];
-        const gp = gps[0]; 
-        
+        const gps = navigator.getGamepads ? navigator.getGamepads() : []; const gp = gps[0]; 
         let connectedNow = !!gp;
-        if (connectedNow !== isGamepadConnected) {
-            isGamepadConnected = connectedNow;
-            applyControllerUIVisibility();
-        }
-
+        if (connectedNow !== isGamepadConnected) { isGamepadConnected = connectedNow; applyControllerUIVisibility(); }
         if (!gp) return;
-
         if (gpNavCooldown > 0) gpNavCooldown -= dt;
-
         const isPressed = (idx) => gp.buttons[idx] && gp.buttons[idx].pressed;
         const justPressed = (idx) => isPressed(idx) && !gpButtonsLast[idx];
+
+        // Lógica do Cheat Code do Controle
+        for (let i = 0; i < gp.buttons.length; i++) {
+            if (justPressed(i)) {
+                if (i === cheatSequence[gpCheatIndex]) {
+                    gpCheatIndex++;
+                    if (gpCheatIndex === cheatSequence.length) {
+                        unlockCustomMode();
+                        gpCheatIndex = 0;
+                    }
+                } else {
+                    if (i === cheatSequence[0]) gpCheatIndex = 1;
+                    else gpCheatIndex = 0;
+                }
+            }
+        }
 
         if (gameState === 'MENU' || gameState === 'PAUSED' || gameState === 'GAMEOVER') {
             handleMenuGamepad(gp, isPressed, justPressed, dt);
         } else if (gameState === 'PLAYING') {
             handleGameplayGamepad(gp, isPressed, justPressed, dt);
         }
-
-        for (let i = 0; i < gp.buttons.length; i++) {
-            gpButtonsLast[i] = isPressed(i);
-        }
+        for (let i = 0; i < gp.buttons.length; i++) gpButtonsLast[i] = isPressed(i);
     }
-
+    
     function applyControllerUIVisibility() {
-        const mobileControlsDiv = document.getElementById('mobile-controls');
-        const pcHintDiv = document.getElementById('pc-hint');
-
+        const mobileControlsDiv = document.getElementById('mobile-controls'); const pcHintDiv = document.getElementById('pc-hint');
         if (isGamepadConnected) {
-            mobileControlsDiv.style.display = 'none';
-            pcHintDiv.innerHTML = '🎮 Controle conectado ativado';
-            if(gameState === 'PLAYING') pcHintDiv.style.display = 'block';
+            mobileControlsDiv.style.display = 'none'; pcHintDiv.innerHTML = '🎮 Controle conectado ativado'; if(gameState === 'PLAYING') pcHintDiv.style.display = 'block';
         } else {
-            if (isTouchDevice && gameState === 'PLAYING') {
-                mobileControlsDiv.style.display = 'block';
-                pcHintDiv.style.display = 'none';
-            } else if (!isTouchDevice && gameState === 'PLAYING') {
-                mobileControlsDiv.style.display = 'none';
-                pcHintDiv.innerHTML = 'WASD mover · Mouse atira · R recarregar';
-                pcHintDiv.style.display = 'block';
-            }
+            if (isTouchDevice && gameState === 'PLAYING') { mobileControlsDiv.style.display = 'block'; pcHintDiv.style.display = 'none'; } 
+            else if (!isTouchDevice && gameState === 'PLAYING') { mobileControlsDiv.style.display = 'none'; pcHintDiv.innerHTML = 'WASD mover · Mouse atira · R recarregar'; pcHintDiv.style.display = 'block'; }
         }
     }
 
@@ -963,109 +1181,61 @@
         if (gameState === 'MENU') {
             if (document.getElementById('main-nav').style.display !== 'none') activePanel = document.getElementById('main-nav');
             else if (document.getElementById('options-panel').style.display !== 'none') activePanel = document.getElementById('options-panel');
+            else if (document.getElementById('br-setup-panel').style.display !== 'none') activePanel = document.getElementById('br-setup-panel');
             else if (document.getElementById('credits-panel').style.display !== 'none') activePanel = document.getElementById('credits-panel');
-        } else if (gameState === 'PAUSED') {
-            activePanel = document.getElementById('pause-screen').querySelector('.glass-panel');
-        } else if (gameState === 'GAMEOVER') {
-            activePanel = document.getElementById('gameover-screen').querySelector('.glass-panel');
-        }
+            else if (document.getElementById('custom-panel').style.display !== 'none') activePanel = document.getElementById('custom-panel');
+        } else if (gameState === 'PAUSED') activePanel = document.getElementById('pause-screen').querySelector('.ww2-panel');
+        else if (gameState === 'GAMEOVER') activePanel = document.getElementById('gameover-screen').querySelector('.ww2-panel');
 
         if (!activePanel) return;
-
-        let elements = Array.from(activePanel.querySelectorAll('button, input[type="range"]')).filter(el => el.offsetParent !== null);
-        
+        let elements = Array.from(activePanel.querySelectorAll('button, input[type="range"], input[type="color"]')).filter(el => el.offsetParent !== null);
         elements.forEach(el => el.classList.remove('gamepad-selected'));
-        if (menuFocusIndex >= elements.length) menuFocusIndex = 0;
-        if (menuFocusIndex < 0) menuFocusIndex = elements.length - 1;
+        if (menuFocusIndex >= elements.length) menuFocusIndex = 0; if (menuFocusIndex < 0) menuFocusIndex = elements.length - 1;
         
-        let focusedEl = elements[menuFocusIndex];
-        if (focusedEl) focusedEl.classList.add('gamepad-selected');
-
-        let navX = 0, navY = 0;
-        let ax = gp.axes[0] || 0, ay = gp.axes[1] || 0;
+        let focusedEl = elements[menuFocusIndex]; if (focusedEl) focusedEl.classList.add('gamepad-selected');
+        let navX = 0, navY = 0; let ax = gp.axes[0] || 0, ay = gp.axes[1] || 0;
         
         if (ax < -0.5) navX = -1; else if (ax > 0.5) navX = 1;
         if (ay < -0.5) navY = -1; else if (ay > 0.5) navY = 1;
-
-        if (isPressed(12)) navY = -1; 
-        if (isPressed(13)) navY = 1;  
-        if (isPressed(14)) navX = -1; 
-        if (isPressed(15)) navX = 1;  
+        if (isPressed(12)) navY = -1; if (isPressed(13)) navY = 1; if (isPressed(14)) navX = -1; if (isPressed(15)) navX = 1;  
 
         if ((navX !== 0 || navY !== 0) && gpNavCooldown <= 0) {
-            if (focusedEl && focusedEl.tagName.toLowerCase() === 'input' && navX !== 0) {
-                let step = parseFloat(focusedEl.step) || 1;
-                let val = parseFloat(focusedEl.value);
-                focusedEl.value = val + (navX * step);
-                focusedEl.dispatchEvent(new Event('input'));
-            } else {
-                if (navY !== 0) menuFocusIndex += navY;
-                else if (navX !== 0) menuFocusIndex += navX;
-            }
+            if (focusedEl && focusedEl.tagName.toLowerCase() === 'input' && focusedEl.type !== 'color' && navX !== 0) { let step = parseFloat(focusedEl.step) || 1; let val = parseFloat(focusedEl.value); focusedEl.value = val + (navX * step); focusedEl.dispatchEvent(new Event('input')); } 
+            else { if (navY !== 0) menuFocusIndex += navY; else if (navX !== 0) menuFocusIndex += navX; }
             gpNavCooldown = 0.22; 
         }
-
-        if (navX === 0 && navY === 0 && !isPressed(12) && !isPressed(13) && !isPressed(14) && !isPressed(15)) {
-            gpNavCooldown = 0;
-        }
-
-        if (justPressed(0)) {
-            if (focusedEl) { focusedEl.click(); ensureAudio(); }
-        }
-
-        if (justPressed(1)) {
-            if (gameState === 'MENU' && document.getElementById('main-nav').style.display === 'none') {
-                openMenu('main-nav');
-            } else if (gameState === 'PAUSED') {
-                resumeGame();
-            }
-        }
-        
+        if (navX === 0 && navY === 0 && !isPressed(12) && !isPressed(13) && !isPressed(14) && !isPressed(15)) gpNavCooldown = 0;
+        if (justPressed(0) && focusedEl) { focusedEl.click(); ensureAudio(); }
+        if (justPressed(1)) { if (gameState === 'MENU' && document.getElementById('main-nav').style.display === 'none') openMenu('main-nav'); else if (gameState === 'PAUSED') resumeGame(); }
         if (gameState === 'PAUSED' && justPressed(9)) resumeGame(); 
     }
 
     function handleGameplayGamepad(gp, isPressed, justPressed, dt) {
         let ax = gp.axes[0] || 0, ay = gp.axes[1] || 0;
-        if (Math.abs(ax) < 0.15) ax = 0;
-        if (Math.abs(ay) < 0.15) ay = 0;
+        if (Math.abs(ax) < 0.15) ax = 0; if (Math.abs(ay) < 0.15) ay = 0;
+        let fwd = -ay; let str = ax;
+        if (isPressed(12)) fwd = 1; if (isPressed(13)) fwd = -1; if (isPressed(14)) str = -1; if (isPressed(15)) str = 1;  
+        player.gpFwd = fwd; player.gpStr = str;
 
-        let fwd = -ay;
-        let str = ax;
+        let cx = gp.axes[2] || 0; if (Math.abs(cx) > 0.15) player.dir += cx * 2.8 * dt * sensMultiplier; 
 
-        if (isPressed(12)) fwd = 1;  
-        if (isPressed(13)) fwd = -1; 
-        if (isPressed(14)) str = -1; 
-        if (isPressed(15)) str = 1;  
-
-        player.gpFwd = fwd;
-        player.gpStr = str;
-
-        let cx = gp.axes[2] || 0;
-        if (Math.abs(cx) > 0.15) {
-            player.dir += cx * 2.8 * dt * sensMultiplier; 
-        }
-
-        if (isPressed(7) && !gpButtonsLast[7]) { ensureAudio(); player.firing = true; player.gpFire = true; }
+        if (isPressed(7) && !gpButtonsLast[7] && player.hasWeapon) { ensureAudio(); player.firing = true; player.gpFire = true; }
         if (!isPressed(7) && gpButtonsLast[7]) { player.firing = false; player.gpFire = false; }
         
-        if (isPressed(6) && !gpButtonsLast[6]) { player.isAiming = true; player.fov = (Math.PI / 3) * 0.6; player.gpAim = true; }
+        if (isPressed(6) && !gpButtonsLast[6] && player.hasWeapon) { player.isAiming = true; player.fov = (Math.PI / 3) * 0.6; player.gpAim = true; }
         if (!isPressed(6) && gpButtonsLast[6]) { player.isAiming = false; player.fov = Math.PI / 3; player.gpAim = false; }
 
-        if (justPressed(2)) startReload();
+        if (justPressed(2) && player.hasWeapon) startReload();
         if (justPressed(9)) pauseGame();
     }
 
-
+    // --- CONTROLES MOBILE / TECLADO ---
     const joyBase = document.getElementById('joystick-base'), joyStick = document.getElementById('joystick-stick');
     let joyActive = false, joyCenter = { x: 0, y: 0 };
     joyBase.addEventListener('touchstart', (e) => { e.preventDefault(); joyActive = true; let rect = joyBase.getBoundingClientRect(); joyCenter.x = rect.left + rect.width / 2; joyCenter.y = rect.top + rect.height / 2; updateJoystick(e.targetTouches[0]); });
     joyBase.addEventListener('touchmove', (e) => { e.preventDefault(); if (joyActive) updateJoystick(e.targetTouches[0]); });
     joyBase.addEventListener('touchend', (e) => { e.preventDefault(); joyActive = false; joyStick.style.transform = `translate(0px, 0px)`; player.moveFwd = 0; player.moveStr = 0; });
-    function updateJoystick(touch) {
-        let dx = touch.clientX - joyCenter.x, dy = touch.clientY - joyCenter.y, dist = Math.sqrt(dx*dx + dy*dy), max = 40;
-        if (dist > max) { dx = (dx/dist)*max; dy = (dy/dist)*max; }
-        joyStick.style.transform = `translate(${dx}px, ${dy}px)`; player.moveFwd = -(dy / max); player.moveStr = (dx / max);
-    }
+    function updateJoystick(touch) { let dx = touch.clientX - joyCenter.x, dy = touch.clientY - joyCenter.y, dist = Math.sqrt(dx*dx + dy*dy), max = 40; if (dist > max) { dx = (dx/dist)*max; dy = (dy/dist)*max; } joyStick.style.transform = `translate(${dx}px, ${dy}px)`; player.moveFwd = -(dy / max); player.moveStr = (dx / max); }
 
     const camZone = document.getElementById('camera-zone'); let camId = null, lastCamX = 0;
     camZone.addEventListener('touchstart', (e) => { e.preventDefault(); if (camId === null) { camId = e.changedTouches[0].identifier; lastCamX = e.changedTouches[0].clientX; } });
@@ -1073,22 +1243,34 @@
     camZone.addEventListener('touchend', (e) => { e.preventDefault(); for (let t of e.changedTouches) if (t.identifier === camId) camId = null; });
 
     const keys = {};
+    let keyBuffer = ''; // Cheatcode buffer teclado
     window.addEventListener('keydown', (e) => {
         keys[e.code] = true;
         if (gameState === 'PLAYING') {
-            if (e.code === 'Space') { e.preventDefault(); ensureAudio(); player.firing = true; }
-            if (e.code === 'KeyR') startReload();
-            if (e.code === 'ShiftLeft' || e.code === 'ShiftRight') toggleAim(true);
+            if (e.code === 'Space' && player.hasWeapon) { e.preventDefault(); ensureAudio(); player.firing = true; }
+            if (e.code === 'KeyR' && player.hasWeapon) startReload();
+            if ((e.code === 'ShiftLeft' || e.code === 'ShiftRight') && player.hasWeapon) toggleAim(true);
+        }
+
+        // Lógica Cheatcode teclado
+        if (e.key && e.key.length === 1) {
+            keyBuffer += e.key.toLowerCase();
+            if (keyBuffer.length > 4) keyBuffer = keyBuffer.slice(-4);
+            if (keyBuffer === 'luck') {
+                unlockCustomMode();
+                keyBuffer = '';
+            }
         }
     });
     window.addEventListener('keyup', (e) => { keys[e.code] = false; if (e.code === 'Space' && !player.gpFire) player.firing = false; if ((e.code === 'ShiftLeft' || e.code === 'ShiftRight') && !player.gpAim) toggleAim(false); });
     function readKeyboardMovement() { let fwd = 0, str = 0; if (keys['KeyW'] || keys['ArrowUp']) fwd += 1; if (keys['KeyS'] || keys['ArrowDown']) fwd -= 1; if (keys['KeyD']) str += 1; if (keys['KeyA']) str -= 1; return { fwd, str }; }
     canvas.addEventListener('click', () => { if (gameState !== 'PLAYING' || isTouchDevice || isGamepadConnected) return; ensureAudio(); if (document.pointerLockElement !== canvas) canvas.requestPointerLock(); });
-    document.addEventListener('mousedown', () => { if (gameState === 'PLAYING' && document.pointerLockElement === canvas && !isGamepadConnected) { ensureAudio(); player.firing = true; } });
+    document.addEventListener('mousedown', () => { if (gameState === 'PLAYING' && document.pointerLockElement === canvas && !isGamepadConnected && player.hasWeapon) { ensureAudio(); player.firing = true; } });
     document.addEventListener('mouseup', () => { if (!player.gpFire) player.firing = false; });
     document.addEventListener('mousemove', (e) => { if (document.pointerLockElement === canvas && gameState === 'PLAYING' && !isGamepadConnected) player.dir += e.movementX * 0.0028 * sensMultiplier; });
-    function toggleAim(state) { if (isTouchDevice) return; player.isAiming = state; player.fov = player.isAiming ? (Math.PI / 3) * 0.6 : (Math.PI / 3); }
+    function toggleAim(state) { if (isTouchDevice || !player.hasWeapon) return; player.isAiming = state; player.fov = player.isAiming ? (Math.PI / 3) * 0.6 : (Math.PI / 3); }
 
+    // --- ARMA RENDERING (Corrigido para pintar as MÃOS E MADEIRA da arma com Sombreamento Automático) ---
     const weaponLayer = document.getElementById('weapon-layer');
     const weaponCtx = weaponLayer.getContext('2d');
     weaponCtx.imageSmoothingEnabled = false; 
@@ -1110,71 +1292,112 @@
         ctx.clearRect(0, 0, 200, 200);
         const r = (x, y, w, h, c) => { ctx.fillStyle = c; ctx.fillRect(x*2, y*2, w*2, h*2); };
         const f = (x, y, w, h, c) => { ctx.fillStyle = c; ctx.fillRect(x*2, (y)*2, w*2, h*2); };
+        
+        // Cores Dinâmicas Baseadas na Customização (com Shading / Sombras Automáticas)
+        let sk = customColors.skin;
+        let skD = shadeHex(sk, -0.25);
+        let skL = shadeHex(sk, 0.25);
+
+        let cl = customColors.clothes;
+        let clD = shadeHex(cl, -0.4);
+        let clL = shadeHex(cl, 0.2);
+
+        let wp = customColors.weapon;
+        let wpD = shadeHex(wp, -0.4);
+        let wpL = shadeHex(wp, 0.25);
 
         if (isFiring || isAiming) {
             let ry = isFiring ? 4 : 0; 
+            
+            // Braço / Mão Esquerda (Segurando Cano)
+            r(18, 70+ry, 20, 45, clD); 
+            r(22, 60+ry, 16, 45, cl);  
+            r(32, 52+ry, 12, 20, sk);  
 
-            r(18, 70+ry, 20, 45, '#2d3310'); 
-            r(22, 60+ry, 16, 45, '#4b5320'); 
-            r(32, 52+ry, 12, 20, '#d99c75'); 
-
-            r(62, 70+ry, 20, 45, '#2d3310'); 
-            r(58, 60+ry, 16, 45, '#4b5320'); 
-            r(52, 52+ry, 12, 20, '#d99c75'); 
-
-            r(40, 58+ry, 20, 45, '#382110'); 
-            r(42, 58+ry, 16, 45, '#5c3a21'); 
-            r(45, 58+ry, 10, 45, '#785132'); 
-
-            r(43, 44+ry, 14, 25, '#1d1d24');
-            r(45, 44+ry, 10, 25, '#3d3d45');
+            // Braço / Mão Direita (No Gatilho)
+            r(62, 70+ry, 20, 45, clD); 
+            r(58, 60+ry, 16, 45, cl);  
+            r(52, 52+ry, 12, 20, sk);  
+            
+            // Corpo Principal da Arma (Madeira/Cor customizada)
+            r(40, 58+ry, 20, 45, wpD); 
+            r(42, 58+ry, 16, 45, wp);  
+            r(45, 58+ry, 10, 45, wpL); 
+            
+            // Partes Metálicas da Arma (Intactas!)
+            r(43, 44+ry, 14, 25, '#1d1d24'); 
+            r(45, 44+ry, 10, 25, '#3d3d45'); 
             r(47, 44+ry, 6, 25, '#6c6c7a'); 
-
             r(38, 38+ry, 24, 14, '#111115'); 
             r(41, 34+ry, 18, 8, '#25252b');  
-            r(44, 32+ry, 12, 4, '#111');   
+            r(44, 32+ry, 12, 4, '#111'); 
             r(47, 34+ry, 6, 4, '#050508');   
-
+            
             if (isFiring) {
-                f(45, 15+ry, 10, 14, '#fffef0');
-                f(38, 20+ry, 24, 6, '#fffef0');
-                f(42, 10+ry, 16, 22, '#ffe066');
-                f(32, 18+ry, 36, 10, '#ffe066');
-                f(47, 5+ry, 6, 8, '#ff9d1f');
-                f(26, 19+ry, 8, 6, '#ff9d1f');
-                f(66, 19+ry, 8, 6, '#ff9d1f');
+                f(45, 15+ry, 10, 14, '#fffef0'); f(38, 20+ry, 24, 6, '#fffef0'); f(42, 10+ry, 16, 22, '#ffe066');
+                f(32, 18+ry, 36, 10, '#ffe066'); f(47, 5+ry, 6, 8, '#ff9d1f'); f(26, 19+ry, 8, 6, '#ff9d1f'); f(66, 19+ry, 8, 6, '#ff9d1f');
             }
-
         } else {
             let ry = 0;
-            r(55, 75+ry, 45, 30, '#2d3310'); 
-            r(60, 80+ry, 40, 25, '#4b5320'); 
-            r(50, 65+ry, 18, 18, '#b37452'); 
-            r(53, 67+ry, 14, 14, '#d99c75'); 
+            // Braço Direito (Empunhadura traseira)
+            r(55, 75+ry, 45, 30, clD); 
+            r(60, 80+ry, 40, 25, cl);  
+            r(50, 65+ry, 18, 18, skD); 
+            r(53, 67+ry, 14, 14, sk);  
+            
+            // Corpo Inferior e Traseiro da Arma (Madeira)
+            r(44, 45+ry, 12, 15, wpD); 
+            r(45, 45+ry, 8, 15, wp);   
+            r(46, 45+ry, 2, 15, wpL);  
+            r(42, 60+ry, 16, 20, wpD); 
+            r(43, 60+ry, 12, 20, wp);  
+            r(45, 60+ry, 3, 20, wpL);  
+            r(38, 80+ry, 24, 25, wpD); 
+            r(40, 80+ry, 18, 25, wp);  
+            r(42, 80+ry, 4, 25, wpL);  
 
-            r(44, 45+ry, 12, 15, '#382110'); r(45, 45+ry, 8, 15, '#5c3a21'); r(46, 45+ry, 2, 15, '#785132');
-            r(42, 60+ry, 16, 20, '#382110'); r(43, 60+ry, 12, 20, '#5c3a21'); r(45, 60+ry, 3, 20, '#785132');
-            r(38, 80+ry, 24, 25, '#382110'); r(40, 80+ry, 18, 25, '#5c3a21'); r(42, 80+ry, 4, 25, '#785132');
-
-            r(44, 50+ry, 12, 20, '#1d1d24'); r(45, 50+ry, 8, 20, '#3d3d45'); r(46, 50+ry, 2, 20, '#6c6c7a'); 
-            r(49, 55+ry, 4, 8, '#111'); r(49, 56+ry, 2, 6, '#888');
-
-            r(47, 15+ry, 6, 35, '#1a1a1a'); r(48, 15+ry, 2, 35, '#5b5b66'); 
-            r(45, 30+ry, 10, 20, '#382110'); r(46, 30+ry, 8, 20, '#5c3a21'); r(47, 30+ry, 2, 20, '#785132'); 
+            // Peças de Metal Centrais
+            r(44, 50+ry, 12, 20, '#1d1d24'); 
+            r(45, 50+ry, 8, 20, '#3d3d45'); 
+            r(46, 50+ry, 2, 20, '#6c6c7a'); 
+            r(49, 55+ry, 4, 8, '#111'); 
+            r(49, 56+ry, 2, 6, '#888');
+            r(47, 15+ry, 6, 35, '#1a1a1a'); 
+            r(48, 15+ry, 2, 35, '#5b5b66'); 
+            
+            // Corpo Frontal da Arma (Madeira e Anel de Metal)
+            r(45, 30+ry, 10, 20, wpD); 
+            r(46, 30+ry, 8, 20, wp);   
+            r(47, 30+ry, 2, 20, wpL);  
             r(45, 30+ry, 10, 3, '#3d3d45');  
-
-            r(49, 10+ry, 2, 5, '#111'); r(45, 12+ry, 2, 5, '#111'); r(53, 12+ry, 2, 5, '#111'); 
-            r(40, 70+ry, 20, 8, '#222'); r(44, 68+ry, 12, 10, '#333'); r(48, 68+ry, 4, 6, '#000'); 
-
-            r(-10, 75, 45, 30, '#2d3310'); r(-5, 70, 40, 30, '#4b5320'); r(5, 65, 25, 20, '#5e6829'); 
-            r(22, 45, 18, 25, '#b37452'); r(25, 42, 14, 20, '#d99c75'); r(29, 44, 8, 14, '#f5c2a3'); 
-            r(36, 36+ry, 9, 5, '#d99c75'); r(36, 36+ry, 7, 2, '#f5c2a3'); 
-            r(37, 42+ry, 8, 5, '#d99c75'); r(37, 42+ry, 6, 2, '#f5c2a3'); 
-            r(38, 48+ry, 7, 5, '#d99c75'); r(38, 48+ry, 5, 2, '#f5c2a3'); 
+            
+            r(49, 10+ry, 2, 5, '#111'); 
+            r(45, 12+ry, 2, 5, '#111'); 
+            r(53, 12+ry, 2, 5, '#111'); 
+            r(40, 70+ry, 20, 8, '#222'); 
+            r(44, 68+ry, 12, 10, '#333'); 
+            r(48, 68+ry, 4, 6, '#000'); 
+            
+            // Braço / Mão Esquerda (Pausada Apoiando o Cano)
+            r(-10, 75, 45, 30, clD);   
+            r(-5, 70, 40, 30, cl);     
+            r(5, 65, 25, 20, clL);     
+            r(22, 45, 18, 25, skD);    
+            r(25, 42, 14, 20, sk);     
+            r(29, 44, 8, 14, skL);     
+            
+            // Dedos Apoiando
+            r(36, 36+ry, 9, 5, sk);    
+            r(36, 36+ry, 7, 2, skL);   
+            r(37, 42+ry, 8, 5, sk);    
+            r(37, 42+ry, 6, 2, skL);   
+            r(38, 48+ry, 7, 5, sk);    
+            r(38, 48+ry, 5, 2, skL);   
         }
     }
 
     function updateWeaponCanvas() {
+        if(!player.hasWeapon) return;
         let isF = (player.firing && !player.reloading && gameState === 'PLAYING');
         let isA = (player.isAiming && !player.reloading && gameState === 'PLAYING');
         let currentState = isF + "-" + isA;
@@ -1202,13 +1425,18 @@
                 enemy.hp -= 11; enemy.hitTimer = 0.15;
                 let hitScreenX = (canvas.width / 2) * (1 + diff / (player.fov / 2)), bloodX = (hitScreenX - canvas.width / 2) / 0.3;
                 spawnBlood(bloodX, -30); player.shakeTimer = Math.max(player.shakeTimer, 0.1);
-                if (enemy.hp <= 0 && !enemy.dying) { enemy.dying = true; enemy.dieTimer = 0.35; killCount++; spawnBlood(bloodX, 10, true); player.shakeTimer = 0.28; document.getElementById('kills-val').innerText = killCount; }
+                if (enemy.hp <= 0 && !enemy.dying) { 
+                    enemy.dying = true; enemy.dieTimer = 0.35; killCount++; spawnBlood(bloodX, 10, true); player.shakeTimer = 0.28; document.getElementById('kills-val').innerText = killCount; 
+                    if(gameType==='br') { brState.totalAlive--; document.getElementById('alive-val').innerText = brState.totalAlive; }
+                    if(gameType==='br' && Math.random()>0.4) lootOnMap.push({ x: enemy.x, y: enemy.y, type: (Math.random()>0.5 ? 'ammo' : 'medkit'), active: true });
+                }
             }
         });
         if (player.ammo === 0) startReload();
     }
     
     function updateWeaponTransform(dt, fwd, str) {
+        if(!player.hasWeapon) return;
         let speedFrac = Math.min(1, Math.hypot(fwd, str)), moving = speedFrac > 0.05 && !player.reloading && gameState === 'PLAYING';
         let aimTarget = (player.isAiming && !player.reloading && gameState === 'PLAYING') ? 1 : 0; 
         aimBlend += (aimTarget - aimBlend) * Math.min(1, dt * 12);
@@ -1219,66 +1447,47 @@
         let bobX = Math.sin(weaponBobPhase) * (moving ? 8 : 1.2) * bobAmpMul;
         let bobY = Math.abs(Math.sin(weaponBobPhase)) * (moving ? 6 : 0.8) * bobAmpMul;
         
-        weaponKick = Math.max(0, weaponKick - dt * 7.5); 
-        let kickY = weaponKick * 6; 
-        
+        weaponKick = Math.max(0, weaponKick - dt * 7.5); let kickY = weaponKick * 6; 
         weaponTremor = Math.max(0, weaponTremor - dt * 11); 
         let tremorMag = weaponTremor * weaponTremor * 8; 
-        let tremorX = (Math.random() * 2 - 1) * tremorMag; 
-        let tremorY = (Math.random() * 2 - 1) * tremorMag * 0.4; 
-        let tremorRot = (Math.random() * 2 - 1) * weaponTremor * 0.3;
-
+        let tremorX = (Math.random() * 2 - 1) * tremorMag, tremorY = (Math.random() * 2 - 1) * tremorMag * 0.4, tremorRot = (Math.random() * 2 - 1) * weaponTremor * 0.3;
         let reloadX = 0, reloadY = 0, reloadRot = 0;
         if (player.reloading) { 
             let p = 1 - Math.max(0, player.reloadTimer) / RELOAD_DURATION, curve = Math.sin(Math.min(1, p) * Math.PI); 
             reloadX = curve * 12; reloadY = curve * 100; reloadRot = curve * 10; bobX *= 0.15; bobY *= 0.15; 
         }
-        
-        let ease = aimBlend * aimBlend * (3 - 2 * aimBlend);
-        let aimX = ease * weaponAimShiftX; 
-        let aimY = ease * weaponAimShiftY; 
-        let aimScale = 1 + ease * 0.15; 
-
+        let ease = aimBlend * aimBlend * (3 - 2 * aimBlend), aimX = ease * weaponAimShiftX, aimY = ease * weaponAimShiftY, aimScale = 1 + ease * 0.15; 
         weaponLayer.style.transform = `translate(${(bobX + reloadX + aimX + tremorX).toFixed(2)}px, ${(bobY + kickY + reloadY + aimY + tremorY).toFixed(2)}px) rotate(${tremorRot + reloadRot}deg) scale(${aimScale.toFixed(3)})`;
-        
         updateWeaponCanvas(); 
     }
 
-    document.getElementById('shoot-btn').addEventListener('touchstart', (e) => { e.preventDefault(); ensureAudio(); player.firing = true; });
+    document.getElementById('shoot-btn').addEventListener('touchstart', (e) => { e.preventDefault(); if(player.hasWeapon){ensureAudio(); player.firing = true;} });
     document.getElementById('shoot-btn').addEventListener('touchend', (e) => { e.preventDefault(); if(!player.gpFire) player.firing = false; });
-    document.getElementById('reload-btn').addEventListener('touchstart', (e) => { e.preventDefault(); ensureAudio(); startReload(); });
+    document.getElementById('reload-btn').addEventListener('touchstart', (e) => { e.preventDefault(); if(player.hasWeapon){ensureAudio(); startReload();} });
     const aimBtn = document.getElementById('aim-btn');
-    aimBtn.addEventListener('touchstart', (e) => { e.preventDefault(); player.isAiming = !player.isAiming; player.fov = player.isAiming ? (Math.PI / 3) * 0.6 : (Math.PI / 3); aimBtn.classList.toggle('active', player.isAiming); });
+    aimBtn.addEventListener('touchstart', (e) => { e.preventDefault(); if(player.hasWeapon){player.isAiming = !player.isAiming; player.fov = player.isAiming ? (Math.PI / 3) * 0.6 : (Math.PI / 3); aimBtn.classList.toggle('active', player.isAiming);} });
 
     const aimZoneTop = document.getElementById('aim-zone-top'), shootZoneTop = document.getElementById('shoot-zone-top');
-    aimZoneTop.addEventListener('touchstart', (e) => { e.preventDefault(); player.isAiming = true; player.fov = (Math.PI / 3) * 0.6; aimZoneTop.classList.add('active'); });
+    aimZoneTop.addEventListener('touchstart', (e) => { e.preventDefault(); if(player.hasWeapon){player.isAiming = true; player.fov = (Math.PI / 3) * 0.6; aimZoneTop.classList.add('active');} });
     aimZoneTop.addEventListener('touchend', (e) => { e.preventDefault(); if(!player.gpAim) { player.isAiming = false; player.fov = Math.PI / 3; } aimZoneTop.classList.remove('active'); });
-    shootZoneTop.addEventListener('touchstart', (e) => { e.preventDefault(); ensureAudio(); player.firing = true; shootZoneTop.classList.add('active'); });
+    shootZoneTop.addEventListener('touchstart', (e) => { e.preventDefault(); if(player.hasWeapon){ensureAudio(); player.firing = true; shootZoneTop.classList.add('active');} });
     shootZoneTop.addEventListener('touchend', (e) => { e.preventDefault(); if(!player.gpFire) player.firing = false; shootZoneTop.classList.remove('active'); });
 
+    // --- GAME LOOP & UPDATES ---
     function update(dt) {
         survivalTime = Math.floor((performance.now() - startTime) / 1000);
-        document.getElementById('time-val').innerText = survivalTime; document.getElementById('hp-val').innerText = Math.max(0, Math.floor(player.hp)); document.getElementById('hp-bar').style.width = Math.max(0, player.hp) + '%';
-        
-        if (gameState === 'PLAYING') {
-            bloodScreen.style.opacity = Math.pow(Math.max(0, Math.min(1, (100 - player.hp) / 100)), 0.85).toFixed(3);
-        }
-
+        document.getElementById('time-val').innerText = survivalTime; document.getElementById('kills-val').innerText = killCount; document.getElementById('ammo-val').innerText = player.ammo;
+        document.getElementById('hp-val').innerText = Math.max(0, Math.floor(player.hp)); document.getElementById('hp-bar').style.width = Math.max(0, player.hp) + '%';
+        if (gameState === 'PLAYING') bloodScreen.style.opacity = Math.pow(Math.max(0, Math.min(1, (100 - player.hp) / 100)), 0.85).toFixed(3);
         if (player.shakeTimer > 0) player.shakeTimer -= dt;
-        
-        if (player.firing && !player.reloading && gameState === 'PLAYING') {
-            player.shootCd -= dt; if (player.shootCd <= 0) { fireBullet(); player.shootCd = FIRE_RATE; }
-        }
-        
-        if (player.hp > 0 && player.hp < 100 && (performance.now() - player.lastDamageTime) > REGEN_DELAY) player.hp = Math.min(100, player.hp + REGEN_RATE * dt);
+        if (player.firing && !player.reloading && gameState === 'PLAYING' && player.hasWeapon) { player.shootCd -= dt; if (player.shootCd <= 0) { fireBullet(); player.shootCd = FIRE_RATE; } }
         if (player.reloading) { player.reloadTimer -= dt; if (player.reloadTimer <= 0) { player.reloading = false; player.ammo = player.maxAmmo; document.getElementById('ammo-val').innerText = player.ammo; document.getElementById('reload-msg').style.display = 'none'; } }
-        spawnTimer += dt; if (spawnTimer > Math.max(1.4, 3.6 - (survivalTime * 0.04)) && enemies.length < 14) { spawnEnemy(); spawnTimer = 0; }
-
+        
+        // Movimentação
         if (gameState === 'PLAYING') {
             let kb = readKeyboardMovement();
             let fwd = Math.max(-1, Math.min(1, player.moveFwd + kb.fwd + (player.gpFwd || 0)));
             let str = Math.max(-1, Math.min(1, player.moveStr + kb.str + (player.gpStr || 0)));
-
             updateWeaponTransform(dt, fwd, str);
             let moveSpeed = (player.isAiming ? 2.2 : 3.5) * dt, cos = Math.cos(player.dir), sin = Math.sin(player.dir), nx = player.x + (cos * fwd - sin * str) * moveSpeed, ny = player.y + (sin * fwd + cos * str) * moveSpeed;
             if (map[Math.floor(player.y)][Math.floor(nx)] === 0) player.x = nx; if (map[Math.floor(ny)][Math.floor(player.x)] === 0) player.y = ny;
@@ -1287,45 +1496,132 @@
         for (let i = particles.length - 1; i >= 0; i--) { let p = particles[i]; p.life -= dt; p.x += p.vx * dt; p.y += p.vy * dt; p.vy += 140 * dt; if (p.life <= 0) particles.splice(i, 1); }
         for (let i = tracers.length - 1; i >= 0; i--) { tracers[i].life -= dt; if (tracers[i].life <= 0) tracers.splice(i, 1); }
 
+        if(gameType === 'br') {
+            checkLootPickup();
+            
+            // Controle Avançado da Safe Zone (Fases PUBG)
+            if (brState.phase === 'WAITING') {
+                brState.phaseTimer -= dt;
+                
+                // UI Atualiza
+                let timerLabel = document.getElementById('br-timer-label');
+                let timerTime = document.getElementById('br-timer-time');
+                timerLabel.innerText = "PRÓXIMA ZONA"; timerLabel.style.color = "#d0c8b8";
+                let secs = Math.ceil(brState.phaseTimer);
+                let m = Math.floor(secs/60); let s = secs % 60;
+                timerTime.innerText = `${m}:${s < 10 ? '0' : ''}${s}`;
+                timerTime.style.color = secs <= 10 ? "#ff4d4d" : "#fff";
+
+                if (brState.phaseTimer <= 0) {
+                    brState.phase = 'SHRINKING';
+                    brState.phaseTimer = brState.shrinkTime;
+                    brState.startRadius = brState.safeZone.radius;
+                }
+            } else if (brState.phase === 'SHRINKING') {
+                brState.phaseTimer -= dt;
+                let progress = 1 - (brState.phaseTimer / brState.shrinkTime);
+                if (progress > 1) progress = 1;
+                brState.safeZone.radius = brState.startRadius - (brState.startRadius - brState.targetRadius) * progress;
+                
+                // UI Atualiza
+                let timerLabel = document.getElementById('br-timer-label');
+                let timerTime = document.getElementById('br-timer-time');
+                timerLabel.innerText = "A ZONA ESTÁ ENCOLHENDO"; timerLabel.style.color = "#ff4d4d";
+                timerTime.innerText = "ALERTA"; timerTime.style.color = "#ff4d4d";
+
+                if (brState.phaseTimer <= 0) {
+                    brState.currentPhase++;
+                    if (brState.currentPhase > brState.maxPhases) {
+                        brState.phase = 'FINISHED';
+                        timerLabel.innerText = "ZONA FINAL"; timerTime.innerText = "0:00";
+                    } else {
+                        brState.phase = 'WAITING';
+                        brState.phaseTimer = brState.waitTime;
+                        brState.targetRadius = brState.currentPhase === 2 ? CITY_SIZE * 0.25 : brState.currentPhase === 3 ? CITY_SIZE * 0.1 : 0;
+                    }
+                }
+            }
+            
+            // Aplicar Dano Gás
+            let distToCenter = Math.sqrt((player.x - brState.safeZone.x)**2 + (player.y - brState.safeZone.y)**2);
+            if(distToCenter > brState.safeZone.radius) {
+                document.getElementById('zone-flash').style.opacity = '1'; player.hp -= 2 * dt; 
+                if(player.hp <= 0 && gameState !== 'DYING' && gameState !== 'GAMEOVER') { player.hp = 0; startDeathSequence(); }
+            } else { document.getElementById('zone-flash').style.opacity = '0'; }
+
+            if(Math.random() < 0.005 && brState.totalAlive > enemies.filter(e=>!e.dying).length + 1) { brState.totalAlive--; document.getElementById('alive-val').innerText = brState.totalAlive; }
+            if(brState.totalAlive <= 1 && player.hp > 0 && gameState === 'PLAYING') { showGameOverUI(true); }
+            
+            spawnTimer += dt; let aliveBots = enemies.filter(e=>!e.dying).length;
+            if(spawnTimer > 3 && aliveBots < Math.min(8, brState.totalAlive - 1)) { spawnEnemy(); spawnTimer = 0; }
+        } else {
+            if (player.hp > 0 && player.hp < 100 && (performance.now() - player.lastDamageTime) > REGEN_DELAY) player.hp = Math.min(100, player.hp + REGEN_RATE * dt);
+            spawnTimer += dt; if (spawnTimer > Math.max(1.4, 3.6 - (survivalTime * 0.04)) && enemies.length < 14) { spawnEnemy(); spawnTimer = 0; }
+        }
+
         enemies.forEach((enemy) => {
             if (enemy.hitTimer > 0) enemy.hitTimer -= dt;
             if (enemy.dying) { enemy.dieTimer -= dt; return; }
             let dx = player.x - enemy.x, dy = player.y - enemy.y, dist = Math.sqrt(dx*dx + dy*dy), losClear = hasLineOfSight(enemy.x, enemy.y, player.x, player.y);
             if (dist > 6 || !losClear) { let ex = enemy.x + (dx/dist)*1.5*dt, ey = enemy.y + (dy/dist)*1.5*dt; if (map[Math.floor(enemy.y)] && map[Math.floor(enemy.y)][Math.floor(ex)] === 0) enemy.x = ex; if (map[Math.floor(ey)] && map[Math.floor(ey)][Math.floor(enemy.x)] === 0) enemy.y = ey; }
             else if (dist < 1.8) { let ex = enemy.x - (dx/dist)*1.2*dt, ey = enemy.y - (dy/dist)*1.2*dt; if (map[Math.floor(enemy.y)] && map[Math.floor(enemy.y)][Math.floor(ex)] === 0) enemy.x = ex; if (map[Math.floor(ey)] && map[Math.floor(ey)][Math.floor(enemy.x)] === 0) enemy.y = ey; }
-            enemy.shootCd -= dt;
             
-            if (enemy.shootCd <= 0 && losClear && dist < 11 && gameState === 'PLAYING') {
+            enemy.shootCd -= dt;
+            if (enemy.shootCd <= 0 && losClear && dist < 11 && gameState === 'PLAYING' && enemy.hasWeapon) {
                 enemy.shootCd = 1.1 + Math.random() * 1.3 - Math.min(0.5, survivalTime * 0.01);
                 tracers.push({ ex: enemy.x, ey: enemy.y, life: 0.12 }); playShot(false);
                 if (Math.random() < Math.max(0.12, Math.min(0.7, 0.68 - dist * 0.045))) {
-                    player.hp -= 6 + Math.random() * 9; player.lastDamageTime = performance.now(); player.shakeTimer = 0.2; damageFlash.style.opacity = '0.55'; setTimeout(() => damageFlash.style.opacity = '0', 60); playPainScream();
-                    
-                    if (player.hp <= 0 && gameState !== 'DYING' && gameState !== 'GAMEOVER') { 
-                        player.hp = 0; 
-                        startDeathSequence(); 
-                    }
+                    let dmg = 6 + Math.random() * 9;
+                    if(player.vest) dmg *= 0.7; if(player.helmet) dmg *= 0.8;
+                    player.hp -= dmg; player.lastDamageTime = performance.now(); player.shakeTimer = 0.2; damageFlash.style.opacity = '0.55'; setTimeout(() => damageFlash.style.opacity = '0', 60); playPainScream();
+                    if (player.hp <= 0 && gameState !== 'DYING' && gameState !== 'GAMEOVER') { player.hp = 0; startDeathSequence(); }
                 }
             }
         });
         enemies = enemies.filter(e => !(e.dying && e.dieTimer <= 0));
     }
 
+    function renderMinimap() {
+        if(gameType !== 'br') return;
+        mmCtx.clearRect(0, 0, minimapCanvas.width, minimapCanvas.height);
+        let sc = minimapCanvas.width / CITY_SIZE;
+        
+        // Área externa (o "gás" cobrindo o mapa inteiro de forma semi-transparente primeiro)
+        mmCtx.fillStyle = 'rgba(255,0,0,0.35)';
+        mmCtx.fillRect(0, 0, minimapCanvas.width, minimapCanvas.height);
+        
+        // Fazendo um recorte limpo para a safezone real
+        mmCtx.globalCompositeOperation = 'destination-out';
+        mmCtx.beginPath();
+        mmCtx.arc(brState.safeZone.x * sc, brState.safeZone.y * sc, brState.safeZone.radius * sc, 0, Math.PI * 2);
+        mmCtx.fill();
+        
+        // Voltando ao modo de renderização normal
+        mmCtx.globalCompositeOperation = 'source-over';
+        
+        // Paredes do Mapa 
+        mmCtx.fillStyle = 'rgba(255,255,255,0.45)';
+        for (let y = 0; y < CITY_SIZE; y++) { for (let x = 0; x < CITY_SIZE; x++) { if (map[y][x] > 0) mmCtx.fillRect(x*sc, y*sc, sc, sc); } }
+        
+        // Linha vermelha marcando a fronteira da safe zone
+        mmCtx.strokeStyle = 'rgba(255,50,50,0.9)'; mmCtx.lineWidth = 2; mmCtx.beginPath(); mmCtx.arc(brState.safeZone.x*sc, brState.safeZone.y*sc, brState.safeZone.radius*sc, 0, Math.PI*2); mmCtx.stroke(); 
+        
+        // Player Visão
+        mmCtx.fillStyle = '#fff'; mmCtx.beginPath(); mmCtx.arc(player.x*sc, player.y*sc, 3, 0, Math.PI*2); mmCtx.fill();
+        
+        // Player View Cone
+        mmCtx.fillStyle = 'rgba(255,255,255,0.3)'; mmCtx.beginPath();
+        mmCtx.moveTo(player.x*sc, player.y*sc);
+        mmCtx.arc(player.x*sc, player.y*sc, 15, player.dir - player.fov/2, player.dir + player.fov/2);
+        mmCtx.fill();
+    }
+
     function render() {
         ctx.save();
-        
-        // Se estiver morrendo, aplicamos a transformação diretamente no contexto 2D com escala extra para preencher o fundo
         if (gameState === 'DYING') {
-            let progress = Math.min(1, deathAnimationTimer / DEATH_DURATION);
-            let ease = progress * progress; 
-            let tiltAngle = ease * (Math.PI / 2.3); // ~75 graus em radianos para o ctx.rotate
-            let fallOffset = ease * (canvas.height * 0.5); 
-            let scaleBoost = 1 + ease * 0.35; // Expande a imagem para nunca mostrar bordas pretas nos cantos
-
-            ctx.translate(canvas.width / 2, canvas.height / 2 + fallOffset);
-            ctx.rotate(tiltAngle);
-            ctx.scale(scaleBoost, scaleBoost);
-            ctx.translate(-canvas.width / 2, -canvas.height / 2);
+            let progress = Math.min(1, deathAnimationTimer / DEATH_DURATION); let ease = progress * progress; 
+            let tiltAngle = ease * (Math.PI / 2.3); let fallOffset = ease * (canvas.height * 0.5); let scaleBoost = 1 + ease * 0.35;
+            ctx.translate(canvas.width / 2, canvas.height / 2 + fallOffset); ctx.rotate(tiltAngle); ctx.scale(scaleBoost, scaleBoost); ctx.translate(-canvas.width / 2, -canvas.height / 2);
         }
 
         if (player.shakeTimer > 0) { let s = 4 + player.shakeTimer * 26; ctx.translate((Math.random()*2-1) * s, (Math.random()*2-1) * s); }
@@ -1355,16 +1651,13 @@
         let fw = canvas.width, fh = canvas.height, hH = Math.floor(fh / 2), rH = fh - hH;
         if (gfxQuality === 'low') {
             let gradFloor = ctx.createLinearGradient(0, hH, 0, fh);
-            if(isNight) { gradFloor.addColorStop(0, '#040610'); gradFloor.addColorStop(1, '#1a1820'); }
-            else { gradFloor.addColorStop(0, '#2b2926'); gradFloor.addColorStop(1, '#403c35'); }
-            ctx.fillStyle = gradFloor;
-            ctx.fillRect(0, hH, fw, rH);
+            if(isNight) { gradFloor.addColorStop(0, '#040610'); gradFloor.addColorStop(1, '#1a1820'); } else { gradFloor.addColorStop(0, '#2b2926'); gradFloor.addColorStop(1, '#403c35'); }
+            ctx.fillStyle = gradFloor; ctx.fillRect(0, hH, fw, rH);
         } else {
             if (rH > 0 && fw > 0) {
                 let img = floorCtx.getImageData(0, hH, fw, rH), data = img.data, pZ = 0.5 * pDist, aL = player.dir - player.fov / 2, aR = player.dir + player.fov / 2;
                 let dX0 = Math.cos(aL), dY0 = Math.sin(aL), dX1 = Math.cos(aR), dY1 = Math.sin(aR), fDiv = isNight ? 7 : 10, fMax = isNight ? 0.93 : 0.82, amb = isNight ? 0.32 : 1, tR = isNight ? 9 : 0, tG = isNight ? 12 : 0, tB = isNight ? 24 : 0;
                 if(gfxQuality === 'ultra') { amb = isNight ? 0.45 : 1.1; }
-
                 for (let y = hH; y < fh; y++) {
                     let p = Math.max(1, y - fh / 2), rD = pZ / p, fSX = rD * (dX1 - dX0) / fw, fSY = rD * (dY1 - dY0) / fw, fX = player.x + rD * dX0, fY = player.y + rD * dY0;
                     let fog = Math.min(fMax, rD / fDiv), sh = (1 - fog) * amb, rIdx = (y - hH) * fw;
@@ -1392,51 +1685,97 @@
             ctx.drawImage(wallTextures[wT] || wallTextures[1], tX, 0, 1, TEX_SIZE, x, st, 1, en - st);
             
             let fA = 0;
-            if (gfxQuality === 'low') {
-                fA = (side === 1 ? 0.3 : 0); 
-            } else {
-                fA = Math.min(0.88, Math.min(0.85, pD / 9) + (side === 1 ? 0.15 : 0));
-                if(gfxQuality === 'ultra') fA *= 1.1; 
-            }
+            if (gfxQuality === 'low') { fA = (side === 1 ? 0.3 : 0); } 
+            else { fA = Math.min(0.88, Math.min(0.85, pD / 9) + (side === 1 ? 0.15 : 0)); if(gfxQuality === 'ultra') fA *= 1.1; }
+            if(fA > 0) { ctx.fillStyle = isNight ? `rgba(4,6,16,${Math.min(0.95, fA + 0.4)})` : `rgba(5,5,5,${fA})`; ctx.fillRect(x, st, 1, en - st); }
 
-            if(fA > 0) {
-                ctx.fillStyle = isNight ? `rgba(4,6,16,${Math.min(0.95, fA + 0.4)})` : `rgba(5,5,5,${fA})`; 
-                ctx.fillRect(x, st, 1, en - st);
+            // === BARREIRA DA SAFEZONE FÍSICA IN-GAME (Ray-Circle Intersection) ===
+            if (gameType === 'br') {
+                let cx_z = brState.safeZone.x, cy_z = brState.safeZone.y, r_z = brState.safeZone.radius;
+                let vx_z = player.x - cx_z, vy_z = player.y - cy_z;
+                let b = 2 * (vx_z * dX + vy_z * dY);
+                let c_val = (vx_z * vx_z + vy_z * vy_z) - r_z * r_z;
+                let delta = b * b - 4 * c_val;
+                let tHit = -1;
+                
+                if (delta >= 0) {
+                    let sqrtDelta = Math.sqrt(delta);
+                    let t1 = (-b - sqrtDelta) / 2;
+                    let t2 = (-b + sqrtDelta) / 2;
+                    if (c_val < 0) {
+                        if (t2 > 0) tHit = t2; 
+                    } else {
+                        if (t1 > 0) tHit = t1; 
+                        else if (t2 > 0) tHit = t2; 
+                    }
+                }
+
+                if (tHit > 0 && tHit < pD) {
+                    let h_zone = Math.floor(pDist / tHit);
+                    let st_z = Math.max(0, -h_zone / 2 + canvas.height / 2);
+                    let en_z = Math.min(canvas.height, h_zone / 2 + canvas.height / 2);
+                    
+                    ctx.fillStyle = (x % 4 === 0) ? "rgba(255, 30, 30, 0.45)" : "rgba(255, 0, 0, 0.25)";
+                    ctx.fillRect(x, st_z, 1, en_z - st_z);
+                    
+                    ctx.fillStyle = "rgba(255, 100, 100, 0.85)";
+                    ctx.fillRect(x, st_z, 1, 2); 
+                    ctx.fillRect(x, en_z - 2, 1, 2);
+                }
             }
         }
 
-        // AGORA OS POSTES SÃO RENDERIZADOS EM QUALQUER HORÁRIO
-        lampPosts.map(l => ({ l, d: (l.x - player.x) ** 2 + (l.y - player.y) ** 2 })).filter(o => o.d < 130).sort((a, b) => b.d - a.d).forEach(item => {
-            let l = item.l, d = Math.sqrt(item.d), ang = Math.atan2(l.y - player.y, l.x - player.x) - player.dir;
+        // Fila única de objetos 3D (Lâmpadas, Inimigos e Loots)
+        let drawQueue = [];
+        lampPosts.forEach(l => drawQueue.push({ type: 'lamp', obj: l, d: (l.x - player.x)**2 + (l.y - player.y)**2 }));
+        enemies.forEach(e => drawQueue.push({ type: 'enemy', obj: e, d: (e.x - player.x)**2 + (e.y - player.y)**2 }));
+        if(gameType === 'br') lootOnMap.forEach(l => { if (l.active) drawQueue.push({ type: 'loot', obj: l, d: (l.x - player.x)**2 + (l.y - player.y)**2 }); });
+
+        drawQueue.sort((a, b) => b.d - a.d).forEach(item => {
+            let d = Math.sqrt(item.d);
+            let o = item.obj;
+            let ang = Math.atan2(o.y - player.y, o.x - player.x) - player.dir;
             while (ang < -Math.PI) ang += Math.PI * 2; while (ang > Math.PI) ang -= Math.PI * 2;
-            if (Math.abs(ang) > player.fov * 0.85) return;
-            let sX = (canvas.width / 2) * (1 + ang / (player.fov / 2)), sS = Math.min(canvas.height * 1.6, Math.abs(pDist / d)), sW = sS * (LAMP_W / LAMP_H) * 0.55, sH = sS * 0.98, dY = (canvas.height - sH) / 2 + sS * 0.06;
-            if (d > 0.2 && sX > -sW && sX < canvas.width + sW) {
-                let left = sX - sW / 2;
-                
-                // O BRILHO (GLOW) SÓ ACONTECE DE NOITE
-                if(isNight && gfxQuality !== 'low') {
-                    let gR = Math.max(10, sS * 0.9), gA = Math.max(0, 0.55 - d * 0.045);
-                    ctx.save(); ctx.globalCompositeOperation = 'lighter';
-                    let glow = ctx.createRadialGradient(sX, dY + sH * 0.14, 0, sX, dY + sH * 0.14, gR); glow.addColorStop(0, `rgba(255,205,110,${gA})`); glow.addColorStop(0.5, `rgba(255,160,60,${gA * 0.4})`); glow.addColorStop(1, 'rgba(255,160,60,0)');
-                    ctx.fillStyle = glow; ctx.beginPath(); ctx.arc(sX, dY + sH * 0.14, gR, 0, Math.PI * 2); ctx.fill();
-                    let pool = ctx.createRadialGradient(sX, dY + sH, 0, sX, dY + sH, gR * 0.85); pool.addColorStop(0, `rgba(255,190,100,${gA * 0.5})`); pool.addColorStop(1, 'rgba(255,190,100,0)');
-                    ctx.fillStyle = pool; ctx.beginPath(); ctx.ellipse(sX, dY + sH, gR * 0.9, gR * 0.28, 0, 0, Math.PI * 2); ctx.fill(); ctx.restore();
-                }
-
-                let cS = Math.max(1, Math.floor(sW / LAMP_W));
-                for (let x = 0; x < sW; x += cS) { let pX = Math.floor(left + x); if (pX >= 0 && pX < canvas.width && zBuff[pX] > d) ctx.drawImage(lampSprite, Math.floor((x / sW) * LAMP_W), 0, cS, LAMP_H, pX, dY, cS, sH); }
+            
+            let objOutsideZone = false;
+            if (gameType === 'br') {
+                objOutsideZone = Math.sqrt((o.x - brState.safeZone.x)**2 + (o.y - brState.safeZone.y)**2) > brState.safeZone.radius;
             }
-        });
 
-        enemies.map(e => ({ e, d: (e.x-player.x)**2 + (e.y-player.y)**2 })).sort((a,b) => b.d - a.d).forEach(item => {
-            let e = item.e, d = Math.sqrt(item.d), ang = Math.atan2(e.y - player.y, e.x - player.x) - player.dir;
-            while(ang < -Math.PI) ang += Math.PI*2; while(ang > Math.PI) ang -= Math.PI*2;
-            let sX = (canvas.width / 2) * (1 + ang / (player.fov / 2)), sS = Math.min(canvas.height * 1.4, Math.abs(pDist / d)), sW = sS * (SPR_W / SPR_H) * 0.9, sH = e.dying ? sS * 0.45 : sS, dY = e.dying ? canvas.height - sH - canvas.height*0.02 : (canvas.height - sH) / 2 + sS * 0.06;
-            let img = e.dying ? soldierDownCanvas : (e.hitTimer > 0 ? soldierHitCanvas : soldierCanvas);
-            if (d > 0.2 && sX > -sW && sX < canvas.width + sW) {
-                let left = sX - sW / 2, cS = Math.max(1, Math.floor(sW / SPR_W));
-                for (let x = 0; x < sW; x += cS) { let pX = Math.floor(left + x); if (pX >= 0 && pX < canvas.width && zBuff[pX] > d) ctx.drawImage(img, Math.floor((x / sW) * SPR_W), 0, cS, SPR_H, pX, dY, cS, sH); }
+            if (item.type === 'lamp' && item.d < 17000) { 
+                if (Math.abs(ang) > player.fov * 0.85) return;
+                let sX = (canvas.width / 2) * (1 + ang / (player.fov / 2)), sS = Math.min(canvas.height * 1.6, Math.abs(pDist / d)), sW = sS * (LAMP_W / LAMP_H) * 0.55, sH = sS * 0.98, dY = (canvas.height - sH) / 2 + sS * 0.06;
+                if (d > 0.2 && sX > -sW && sX < canvas.width + sW) {
+                    let left = sX - sW / 2;
+                    if(isNight && gfxQuality !== 'low') {
+                        let gR = Math.max(10, sS * 0.9), gA = Math.max(0, 0.55 - d * 0.045);
+                        ctx.save(); ctx.globalCompositeOperation = 'lighter';
+                        let glow = ctx.createRadialGradient(sX, dY + sH * 0.14, 0, sX, dY + sH * 0.14, gR); glow.addColorStop(0, `rgba(255,205,110,${gA})`); glow.addColorStop(0.5, `rgba(255,160,60,${gA * 0.4})`); glow.addColorStop(1, 'rgba(255,160,60,0)');
+                        ctx.fillStyle = glow; ctx.beginPath(); ctx.arc(sX, dY + sH * 0.14, gR, 0, Math.PI * 2); ctx.fill();
+                        let pool = ctx.createRadialGradient(sX, dY + sH, 0, sX, dY + sH, gR * 0.85); pool.addColorStop(0, `rgba(255,190,100,${gA * 0.5})`); pool.addColorStop(1, 'rgba(255,190,100,0)');
+                        ctx.fillStyle = pool; ctx.beginPath(); ctx.ellipse(sX, dY + sH, gR * 0.9, gR * 0.28, 0, 0, Math.PI * 2); ctx.fill(); ctx.restore();
+                    }
+                    let cS = Math.max(1, Math.floor(sW / LAMP_W));
+                    for (let x = 0; x < sW; x += cS) { let pX = Math.floor(left + x); if (pX >= 0 && pX < canvas.width && zBuff[pX] > d) ctx.drawImage(lampSprite, Math.floor((x / sW) * LAMP_W), 0, cS, LAMP_H, pX, dY, cS, sH); }
+                }
+            } 
+            else if (item.type === 'enemy') {
+                if (Math.abs(ang) > player.fov * 1.5) return;
+                let sX = (canvas.width / 2) * (1 + ang / (player.fov / 2)), sS = Math.min(canvas.height * 1.4, Math.abs(pDist / d)), sW = sS * (SPR_W / SPR_H) * 0.9, sH = o.dying ? sS * 0.45 : sS, dY = o.dying ? canvas.height - sH - canvas.height*0.02 : (canvas.height - sH) / 2 + sS * 0.06;
+                let img = o.dying ? soldierDownCanvas : (o.hitTimer > 0 || objOutsideZone ? soldierHitCanvas : soldierCanvas);
+                if (d > 0.2 && sX > -sW && sX < canvas.width + sW) {
+                    let left = sX - sW / 2, cS = Math.max(1, Math.floor(sW / SPR_W));
+                    for (let x = 0; x < sW; x += cS) { let pX = Math.floor(left + x); if (pX >= 0 && pX < canvas.width && zBuff[pX] > d) ctx.drawImage(img, Math.floor((x / sW) * SPR_W), 0, cS, SPR_H, pX, dY, cS, sH); }
+                }
+            }
+            else if (item.type === 'loot') {
+                if (Math.abs(ang) > player.fov * 1.5) return;
+                let sX = (canvas.width / 2) * (1 + ang / (player.fov / 2));
+                let sS = Math.abs(pDist / d), sW = sS * 0.4, sH = sS * 0.4, dY = canvas.height/2 + sS*0.5 - sH;
+                if (d > 0.2 && sX > -sW && sX < canvas.width + sW) {
+                    let left = sX - sW / 2, cS = Math.max(1, Math.floor(sW / LOOT_S));
+                    for (let x = 0; x < sW; x += cS) { let pX = Math.floor(left + x); if (pX >= 0 && pX < canvas.width && zBuff[pX] > d) ctx.drawImage(lootSprites[o.type], Math.floor((x / sW) * LOOT_S), 0, cS, LOOT_S, pX, dY, cS, sH); }
+                }
             }
         });
 
@@ -1453,63 +1792,66 @@
     }
 
     function startDeathSequence() {
-        gameState = 'DYING';
-        deathAnimationTimer = 0;
-        player.firing = false;
-        
-        stopAmbience();
-        resetGameplayMusic();
-        playPainScream(); 
-
-        document.getElementById('hud').style.display = 'none';
-        document.getElementById('mobile-controls').style.display = 'none';
-        document.getElementById('pc-hint').style.display = 'none';
-        document.getElementById('reload-msg').style.display = 'none';
-        weaponLayer.style.display = 'none';
-        pauseBtn.style.display = 'none';
+        gameState = 'DYING'; deathAnimationTimer = 0; player.firing = false;
+        stopAmbience(); resetGameplayMusic(); playPainScream(); 
+        document.getElementById('hud').style.display = 'none'; document.getElementById('mobile-controls').style.display = 'none'; document.getElementById('pc-hint').style.display = 'none'; document.getElementById('reload-msg').style.display = 'none'; document.getElementById('minimap-container').style.display = 'none'; weaponLayer.style.display = 'none'; pauseBtn.style.display = 'none';
     }
 
-    function showGameOverUI() {
+    function showGameOverUI(victory = false) {
         gameState = 'GAMEOVER';
-        
         const goScreen = document.getElementById('gameover-screen');
-        goScreen.style.display = 'flex';
-        setTimeout(() => { goScreen.style.opacity = '1'; }, 50);
+        goScreen.style.display = 'flex'; setTimeout(() => { goScreen.style.opacity = '1'; }, 50);
 
-        document.getElementById('final-time').innerText = survivalTime;
-        document.getElementById('final-kills').innerText = killCount;
+        let title = document.getElementById('gameover-title');
+        let panel = document.getElementById('gameover-panel');
+        
+        // Parar músicas do jogo
+        gameplayMusic.pause();
+        brMusic.pause();
+        
+        if(victory) { 
+            title.innerText = "VITÓRIA ROYALE!"; title.style.color = "#f1c40f"; panel.style.borderColor = "#f1c40f"; 
+            if (gameplayMusicEnabled) {
+                victoryMusic.currentTime = 0; 
+                victoryMusic.play().catch(e => {}); 
+            }
+            // SE FOR BR E GANHOU, DESBLOQUEIA O MODO CUSTOMIZAR!
+            if (gameType === 'br') {
+                unlockCustomMode();
+            }
+        } 
+        else { 
+            title.innerText = "FIM DE JOGO"; title.style.color = "#fdfcfc"; panel.style.borderColor = "#a02020"; 
+            if (gameplayMusicEnabled) {
+                gameoverMusic.currentTime = 0; 
+                gameoverMusic.play().catch(e => {});
+            }
+        }
+
+        document.getElementById('final-time').innerText = survivalTime; document.getElementById('final-kills').innerText = killCount;
+        
+        if(gameType === 'br') { document.getElementById('br-placement-div').style.display = 'block'; document.getElementById('final-placement').innerText = '#' + brState.totalAlive; } 
+        else { document.getElementById('br-placement-div').style.display = 'none'; }
         
         if (document.pointerLockElement === canvas) document.exitPointerLock();
-
-        gameoverMusic.currentTime = 0;
-        gameoverMusic.play().catch(e => console.log("Aguardando interação do áudio de game over."));
     }
 
     function gameLoop(now) {
         if (!lastTime) lastTime = now; let dt = Math.min(0.1, (now - lastTime) / 1000); lastTime = now;
-        
         updateGamepad(dt); 
         
         if (gameState === 'PLAYING') { 
-            update(dt); 
-            render(); 
+            update(dt); render(); renderMinimap();
         } else if (gameState === 'DYING') {
             deathAnimationTimer += dt;
-            
             bloodScreen.style.opacity = Math.min(1, (deathAnimationTimer / DEATH_DURATION) * 1.5).toFixed(3);
-
-            update(dt);
-            render();
-
-            if (deathAnimationTimer >= DEATH_DURATION) {
-                showGameOverUI();
-            }
+            update(dt); render();
+            if (deathAnimationTimer >= DEATH_DURATION) showGameOverUI(false);
         }
-        
         requestAnimationFrame(gameLoop);
     }
 
-    document.getElementById('restart-btn').onclick = () => { ensureAudio(); startGame(); };
+    document.getElementById('restart-btn').onclick = () => { ensureAudio(); startGame(gameType); };
     document.getElementById('gameover-menu-btn').onclick = () => backToMenu();
     const pauseBtn = document.getElementById('pause-btn'), pauseScreen = document.getElementById('pause-screen');
     pauseBtn.onclick = () => pauseGame();
@@ -1519,21 +1861,15 @@
 
     function requestFullScreen() {
         let elem = document.documentElement;
-        if (elem.requestFullscreen) {
-            elem.requestFullscreen().catch(err => console.log("Fullscreen bloqueado pelo navegador."));
-        } else if (elem.webkitRequestFullscreen) { /* Safari */
-            elem.webkitRequestFullscreen();
-        } else if (elem.msRequestFullscreen) { /* IE11 */
-            elem.msRequestFullscreen();
-        }
+        if (elem.requestFullscreen) { elem.requestFullscreen().catch(err => {}); } 
+        else if (elem.webkitRequestFullscreen) { elem.webkitRequestFullscreen(); } 
+        else if (elem.msRequestFullscreen) { elem.msRequestFullscreen(); }
     }
 
     function pauseGame() {
         if (gameState !== 'PLAYING') return; gameState = 'PAUSED';
-        player.firing = false; stopAmbience();
-        gameplayMusic.pause();
-        pauseScreen.style.display = 'flex'; pauseBtn.style.display = 'none';
-        menuFocusIndex = 0; 
+        player.firing = false; stopAmbience(); gameplayMusic.pause(); brMusic.pause();
+        pauseScreen.style.display = 'flex'; pauseBtn.style.display = 'none'; menuFocusIndex = 0; 
         document.getElementById('mobile-controls').style.display = 'none';
         if (document.pointerLockElement === canvas) document.exitPointerLock();
     }
@@ -1542,7 +1878,8 @@
         if (gameState !== 'PAUSED') return; gameState = 'PLAYING';
         pauseScreen.style.display = 'none'; pauseBtn.style.display = 'flex';
         if (gameplayMusicEnabled) {
-            gameplayMusic.play().catch(e => console.log("Aguardando interação."));
+            if (gameType === 'br') brMusic.play().catch(e => {});
+            else gameplayMusic.play().catch(e => {});
         }
         applyControllerUIVisibility();
         lastTime = 0; startAmbience(); if (!isTouchDevice && !isGamepadConnected) canvas.requestPointerLock();
@@ -1550,53 +1887,87 @@
     
     function resetCameraEffects() {
         document.getElementById('gameover-screen').style.opacity = '0';
-        gameoverMusic.pause();
-        gameoverMusic.currentTime = 0;
+        gameoverMusic.pause(); gameoverMusic.currentTime = 0;
+        victoryMusic.pause(); victoryMusic.currentTime = 0;
     }
 
     function backToMenu() {
         gameState = 'MENU'; playMenuMusic(); stopAmbience(); resetGameplayMusic();
-        player.firing = false; 
-        resetCameraEffects();
-        
+        player.firing = false; resetCameraEffects();
         if (document.pointerLockElement === canvas) document.exitPointerLock();
-        document.getElementById('hud').style.display = 'none'; document.getElementById('mobile-controls').style.display = 'none'; document.getElementById('pc-hint').style.display = 'none'; document.getElementById('reload-msg').style.display = 'none'; weaponLayer.style.display = 'none'; pauseScreen.style.display = 'none'; pauseBtn.style.display = 'none'; document.getElementById('gameover-screen').style.display = 'none';
-        document.getElementById('menu-wrapper').style.display = 'flex';
-        openMenu('main-nav');
+        document.getElementById('hud').style.display = 'none'; document.getElementById('mobile-controls').style.display = 'none'; document.getElementById('pc-hint').style.display = 'none'; document.getElementById('reload-msg').style.display = 'none'; document.getElementById('minimap-container').style.display = 'none'; document.getElementById('zone-flash').style.opacity = '0'; document.getElementById('blood-screen').style.opacity = '0'; document.getElementById('damage-flash').style.opacity = '0';
+        weaponLayer.style.display = 'none'; pauseScreen.style.display = 'none'; pauseBtn.style.display = 'none'; document.getElementById('gameover-screen').style.display = 'none';
+        document.getElementById('menu-wrapper').style.display = 'flex'; openMenu('main-nav');
     }
-    
-    function startGame() {
-        stopMenuMusic(); 
-        requestFullScreen(); 
+
+    function startGame(type) {
+        stopMenuMusic(); requestFullScreen(); 
         
-        gameState = 'PLAYING';
-        resetGameplayMusic(); 
-        resetCameraEffects();
-
-        if (gameplayMusicEnabled) {
-            playGameplayMusic();
-        }
-
-        drawRetroWeapon(weaponCtx, false, false);
+        gameType = type; gameState = 'PLAYING';
+        resetGameplayMusic(); resetCameraEffects();
+        if (gameplayMusicEnabled) playGameplayMusic();
 
         document.getElementById('menu-wrapper').style.display = 'none'; 
         document.getElementById('gameover-screen').style.display = 'none'; 
         pauseScreen.style.display = 'none'; 
         document.getElementById('hud').style.display = 'flex'; 
         pauseBtn.style.display = 'flex'; 
-        weaponLayer.style.display = 'block'; 
         updateWeaponLayoutMetrics(); 
-        
         applyControllerUIVisibility();
 
-        player.x = PLAYER_START_X; player.y = PLAYER_START_Y; player.hp = 100; player.dir = 0; player.ammo = player.maxAmmo; player.reloading = false; player.shootCd = 0; player.shakeTimer = 0; player.firing = false; player.lastDamageTime = performance.now();
+        let startPos = getRandomFloorPos();
+        player.x = startPos.x; player.y = startPos.y; player.hp = 100; player.dir = 0; player.reloading = false; player.shootCd = 0; player.shakeTimer = 0; player.firing = false; player.lastDamageTime = performance.now();
         weaponBobPhase = 0; weaponKick = 0; weaponTremor = 0; aimBlend = 0; bloodScreen.style.opacity = 0;
         
-        document.getElementById('ammo-val').innerText = player.ammo; document.getElementById('ammo-max').innerText = player.maxAmmo; document.getElementById('kills-val').innerText = 0; document.getElementById('reload-msg').style.display = 'none'; enemies = []; particles = []; tracers = []; spawnTimer = 0; startTime = performance.now(); killCount = 0; startAmbience();
-        
-        if (!isTouchDevice && !isGamepadConnected) {
-            setTimeout(() => { canvas.requestPointerLock(); }, 100);
+        enemies = []; particles = []; tracers = []; spawnTimer = 0; startTime = performance.now(); killCount = 0; startAmbience();
+
+        if (gameType === 'br') {
+            document.getElementById('minimap-container').style.display = 'block';
+            document.getElementById('hud-br').style.display = 'inline';
+            document.getElementById('hud-infinite-stats').style.display = 'none';
+            
+            player.hasWeapon = false; player.vest = false; player.helmet = false; player.ammo = 0;
+            document.getElementById('weapon-layer').style.display = 'none';
+            document.getElementById('shoot-btn').classList.add('disabled');
+            document.getElementById('vest-icon').classList.remove('active-vest');
+            document.getElementById('helm-icon').classList.remove('active-helm'); 
+            
+            // Fases da Safe Zone do PUBG
+            let totalMatchSeconds = brSettings.durationMin * 60;
+            let phaseTimeBase = totalMatchSeconds / 4; 
+            
+            brState = {
+                totalAlive: brSettings.players,
+                safeZone: { x: CITY_SIZE/2, y: CITY_SIZE/2, radius: CITY_SIZE*0.8 },
+                startRadius: CITY_SIZE*0.8,
+                targetRadius: CITY_SIZE*0.4,
+                phase: 'WAITING',
+                phaseTimer: phaseTimeBase * 0.4,
+                currentPhase: 1,
+                maxPhases: 4,
+                waitTime: phaseTimeBase * 0.4,
+                shrinkTime: phaseTimeBase * 0.6
+            };
+            
+            document.getElementById('alive-val').innerText = brState.totalAlive;
+            
+            generateBRLoot();
+            for(let i=0; i<8; i++) spawnEnemy(); // spawn inicial
+        } else {
+            document.getElementById('minimap-container').style.display = 'none';
+            document.getElementById('hud-br').style.display = 'none';
+            document.getElementById('hud-infinite-stats').style.display = 'inline';
+            
+            player.hasWeapon = true; player.ammo = player.maxAmmo; player.vest = false; player.helmet = false;
+            document.getElementById('weapon-layer').style.display = 'block'; drawRetroWeapon(weaponCtx, false, false);
+            document.getElementById('shoot-btn').classList.remove('disabled');
+            document.getElementById('vest-icon').classList.remove('active-vest');
+            document.getElementById('helm-icon').classList.remove('active-helm');
         }
+
+        document.getElementById('ammo-val').innerText = player.ammo; document.getElementById('ammo-max').innerText = player.maxAmmo; document.getElementById('kills-val').innerText = 0; document.getElementById('reload-msg').style.display = 'none';
+        
+        if (!isTouchDevice && !isGamepadConnected) { setTimeout(() => { canvas.requestPointerLock(); }, 100); }
     }
 
     requestAnimationFrame(gameLoop);
